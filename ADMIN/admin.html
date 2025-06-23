@@ -11,12 +11,10 @@
       color: #fff;
       padding: 40px;
     }
-
     h1, h2 {
       color: #f5c518;
       margin-bottom: 20px;
     }
-
     table {
       width: 100%;
       border-collapse: collapse;
@@ -24,31 +22,25 @@
       border-radius: 10px;
       overflow: hidden;
     }
-
     th, td {
       padding: 12px;
       border: 1px solid #444;
       text-align: left;
     }
-
     th {
       background: #333;
     }
-
     tr:nth-child(even) {
       background: #2a2a2a;
     }
-
     tr:hover {
       background: #383838;
     }
-
     .empty {
       text-align: center;
       padding: 20px;
       color: #bbb;
     }
-
     .acc-button, .btn {
       padding: 6px 12px;
       background: #f5c518;
@@ -60,11 +52,9 @@
       font-size: 12px;
       margin: 3px;
     }
-
     .acc-button:hover, .btn:hover {
       background: #ffe44d;
     }
-
     .logout {
       margin-top: 30px;
       display: inline-block;
@@ -72,16 +62,13 @@
       font-size: 14px;
       cursor: pointer;
     }
-
     .logout:hover {
       text-decoration: underline;
       color: red;
     }
-
     .section {
       margin-top: 40px;
     }
-
     input[type="text"], input[type="number"] {
       padding: 6px;
       border-radius: 5px;
@@ -89,19 +76,15 @@
       margin: 6px;
     }
   </style>
-
-  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
-
 <script>
   if (sessionStorage.getItem("isAdmin") !== "true") {
     alert("Akses ditolak! Silakan login sebagai admin.");
     window.location.href = "login.html";
   }
-
   const firebaseConfig = {
     apiKey: "AIzaSyA2F9bh-M-XbBYj14j2i93qkZiAgQHyY1I",
     authDomain: "slotkw-f05d1.firebaseapp.com",
@@ -110,7 +93,6 @@
     messagingSenderId: "2853362042",
     appId: "1:2853362042:web:2253bf70a2bda70f56dec3"
   };
-
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 </script>
@@ -126,13 +108,17 @@
       <th>No Rekening</th>
       <th>No HP</th>
       <th>Saldo</th>
+      <th>Game</th>
+      <th>TO</th>
+      <th>Total Deposit</th>
+      <th>Total Withdraw</th>
       <th>Deposit</th>
       <th>Withdraw</th>
       <th>Isi Saldo</th>
     </tr>
   </thead>
   <tbody id="userList">
-    <tr><td colspan="9" class="empty">Memuat data...</td></tr>
+    <tr><td colspan="13" class="empty">Memuat data...</td></tr>
   </tbody>
 </table>
 
@@ -164,54 +150,53 @@
 <div class="logout" onclick="logout()">🚪 Logout Admin</div>
 
 <script>
-  const tbody = document.getElementById("userList");
-  const depositList = document.getElementById("depositList");
-
-  function renderUsers() {
+  async function renderUsers() {
     const keyword = document.getElementById("searchUser").value.toLowerCase();
-    db.collection("members").get().then(snapshot => {
-      if (snapshot.empty) {
-        tbody.innerHTML = `<tr><td colspan="9" class="empty">Belum ada member.</td></tr>`;
-        return;
-      }
-
-      let html = "";
-      let no = 1;
-
-      snapshot.forEach(doc => {
-        const data = doc.data();
-        if (!data.username.toLowerCase().includes(keyword)) return;
-
-        html += `
-          <tr>
-            <td>${no++}</td>
-            <td>${data.username}</td>
-            <td>${data.namaRek}</td>
-            <td>${data.norek}</td>
-            <td>${data.hp}</td>
-            <td>Rp ${data.saldo?.toLocaleString() || 0}</td>
-            <td>${data.depositStatus || "PENDING"}</td>
-            <td>${data.withdrawStatus || "PENDING"}</td>
-            <td><input type='number' placeholder='Nominal' onchange='isiSaldo("${doc.id}", this.value)'/></td>
-          </tr>
-        `;
-      });
-
-      tbody.innerHTML = html;
-    });
-  }
-
-  function updateStatusDeposit(docId, value) {
-    db.collection("deposits").doc(docId).update({ status: value }).then(renderDeposits);
+    const tbody = document.getElementById("userList");
+    const snapshot = await db.collection("members").get();
+    if (snapshot.empty) {
+      tbody.innerHTML = `<tr><td colspan="13" class="empty">Belum ada member.</td></tr>`;
+      return;
+    }
+    let html = "";
+    let no = 1;
+    for (const doc of snapshot.docs) {
+      const data = doc.data();
+      if (!data.username.toLowerCase().includes(keyword)) continue;
+      let totalDeposit = 0;
+      let totalWithdraw = 0;
+      const depositSnap = await db.collection("deposits").where("username", "==", data.username).where("status", "==", "DITERIMA").get();
+      depositSnap.forEach(d => totalDeposit += d.data().nominal || 0);
+      const withdrawSnap = await db.collection("withdraws").where("username", "==", data.username).where("status", "==", "DITERIMA").get();
+      withdrawSnap.forEach(w => totalWithdraw += w.data().nominal || 0);
+      html += `
+        <tr>
+          <td>${no++}</td>
+          <td>${data.username}</td>
+          <td>${data.namaRek}</td>
+          <td>${data.norek}</td>
+          <td>${data.hp}</td>
+          <td>Rp ${data.saldo?.toLocaleString() || 0}</td>
+          <td>${data.currentGame || '-'}</td>
+          <td>Rp ${data.turnover?.toLocaleString() || 0}</td>
+          <td>Rp ${totalDeposit.toLocaleString()}</td>
+          <td>Rp ${totalWithdraw.toLocaleString()}</td>
+          <td>${data.depositStatus || '-'}</td>
+          <td>${data.withdrawStatus || '-'}</td>
+          <td><input type='number' placeholder='Nominal' onchange='isiSaldo("${doc.id}", this.value)'/></td>
+        </tr>
+      `;
+    }
+    tbody.innerHTML = html;
   }
 
   function renderDeposits() {
+    const depositList = document.getElementById("depositList");
     db.collection("deposits").orderBy("createdAt", "desc").get().then(snapshot => {
       if (snapshot.empty) {
         depositList.innerHTML = `<tr><td colspan="4" class="empty">Tidak ada pengajuan.</td></tr>`;
         return;
       }
-
       let html = "";
       snapshot.forEach(doc => {
         const d = doc.data();
@@ -221,22 +206,41 @@
             <td>Rp ${d.nominal?.toLocaleString()}</td>
             <td>${d.status}</td>
             <td>
-              <button class="acc-button" onclick="updateStatusDeposit('${doc.id}', 'DITERIMA')">✔</button>
+              <button class="acc-button" onclick="terimaDepositDanTambahSaldo('${doc.id}', '${d.username}', ${d.nominal})">✔</button>
               <button class="acc-button" onclick="updateStatusDeposit('${doc.id}', 'DITOLAK')">✖</button>
             </td>
           </tr>
         `;
       });
-
       depositList.innerHTML = html;
     });
+  }
+
+  function terimaDepositDanTambahSaldo(docId, username, nominal) {
+    db.collection("deposits").doc(docId).update({ status: "DITERIMA" }).then(() => {
+      db.collection("members").where("username", "==", username).get().then(snapshot => {
+        if (!snapshot.empty) {
+          const memberDoc = snapshot.docs[0];
+          const data = memberDoc.data();
+          const newSaldo = (data.saldo || 0) + nominal;
+          db.collection("members").doc(memberDoc.id).update({ saldo: newSaldo }).then(() => {
+            alert(`Saldo ${username} bertambah Rp ${nominal.toLocaleString()}`);
+            renderUsers();
+            renderDeposits();
+          });
+        }
+      });
+    });
+  }
+
+  function updateStatusDeposit(docId, value) {
+    db.collection("deposits").doc(docId).update({ status: value }).then(renderDeposits);
   }
 
   function updateRekening() {
     const bank = document.getElementById("bank").value;
     const nama = document.getElementById("nama").value;
     const norek = document.getElementById("norek").value;
-
     db.collection("rekening").doc("rekening").set({ BANK: bank, nama, norek })
       .then(() => alert("Rekening berhasil diperbarui."))
       .catch(err => alert("Gagal update rekening."));
@@ -262,6 +266,5 @@
   renderUsers();
   renderDeposits();
 </script>
-
 </body>
 </html>
