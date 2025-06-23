@@ -69,75 +69,126 @@
       margin-top: 20px;
     }
   </style>
-
-  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
-  <div class="container">
-    <h1>🎰 Slot Game KW</h1>
-
-    <div id="slot">
-      <span id="s1">❓</span>
-      <span id="s2">❓</span>
-      <span id="s3">❓</span>
-    </div>
-
-    <p id="result">Klik SPIN untuk bermain</p>
-    <p>💰 Saldo: <span id="saldo">...</span></p>
-    <p>🎯 Taruhan: <span id="taruhan">250</span></p>
-
-    <div>
-      <button onclick="ubahTaruhan(-50)">-</button>
-      <button onclick="ubahTaruhan(50)">+</button>
-    </div>
-
-    <button onclick="spin()">SPIN</button>
-
-    <div style="margin-top: 20px;">
-      <p>🔁 Auto Spin:</p>
-      <button onclick="autoSpin(10)">Auto 10</button>
-      <button onclick="autoSpin(30)">Auto 30</button>
-      <button onclick="autoSpin(50)">Auto 50</button>
-      <button onclick="autoSpin(100)">Auto 100</button>
-    </div>
+<div class="container">
+  <h1>🎰 Slot Game KW</h1>
+  <div id="slot">
+    <span id="s1">❓</span>
+    <span id="s2">❓</span>
+    <span id="s3">❓</span>
   </div>
+  <p id="result">Klik SPIN untuk bermain</p>
+  <p>💰 Saldo: <span id="saldo">...</span></p>
+  <p>🎯 Taruhan: <span id="taruhan">250</span></p>
+  <div>
+    <button onclick="ubahTaruhan(-50)">-</button>
+    <button onclick="ubahTaruhan(50)">+</button>
+  </div>
+  <button onclick="spin()">SPIN</button>
+  <div style="margin-top: 20px;">
+    <p>🔁 Auto Spin:</p>
+    <button onclick="autoSpin(10)">Auto 10</button>
+    <button onclick="autoSpin(30)">Auto 30</button>
+    <button onclick="autoSpin(50)">Auto 50</button>
+    <button onclick="autoSpin(100)">Auto 100</button>
+  </div>
+</div>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyA2F9bh-M-XbBYj14j2i93qkZiAgQHyY1I",
+    authDomain: "slotkw-f05d1.firebaseapp.com",
+    projectId: "slotkw-f05d1",
+    storageBucket: "slotkw-f05d1.appspot.com",
+    messagingSenderId: "2853362042",
+    appId: "1:2853362042:web:2253bf70a2bda70f56dec3"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
 
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyA2F9bh-M-XbBYj14j2i93qkZiAgQHyY1I",
-      authDomain: "slotkw-f05d1.firebaseapp.com",
-      projectId: "slotkw-f05d1",
-      storageBucket: "slotkw-f05d1.appspot.com",
-      messagingSenderId: "2853362042",
-      appId: "1:2853362042:web:2253bf70a2bda70f56dec3"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+  const symbols = ["🍒", "🍋", "🍊", "💎", "🔔", "🍇"];
+  let bet = 250, saldo = 0, autoCount = 0, autoRunning = false;
 
-    const symbols = ["🍒", "🍋", "🍊", "💎", "🔔", "🍇"];
-    let bet = 250;
-    let saldo = 0;
-    let autoCount = 0;
-    let autoRunning = false;
+  const user = JSON.parse(sessionStorage.getItem("loggedInUser"));
+  if (!user || !user.username) {
+    alert("Anda belum login!");
+    window.location.href = "/NEWW/index.html";
+  }
 
-    const user = JSON.parse(sessionStorage.getItem("loggedInUser"));
-    if (!user || !user.username) {
-      alert("Anda belum login!");
-      window.location.href = "/NEWW/index.html";
+  db.collection("members").where("username", "==", user.username).get().then(snapshot => {
+    if (!snapshot.empty) {
+      const doc = snapshot.docs[0];
+      user.docId = doc.id;
+      saldo = doc.data().saldo || 0;
+      updateUI();
     }
+  });
 
-    // Ambil saldo real dari Firestore
-    db.collection("members").where("username", "==", user.username).get().then(snapshot => {
-      if (!snapshot.empty) {
-        const doc = snapshot.docs[0];
-        user.docId = doc.id;
-        saldo = doc.data().saldo || 0;
-        updateUI();
+  function updateUI() {
+    document.getElementById("saldo").textContent = saldo.toLocaleString();
+    document.getElementById("taruhan").textContent = bet.toLocaleString();
+  }
+
+  function ubahTaruhan(nominal) {
+    bet += nominal;
+    if (bet < 100) bet = 100;
+    if (bet > 10000) bet = 10000;
+    updateUI();
+  }
+
+  function spin() {
+    if (saldo < bet) {
+      alert("Saldo tidak cukup! Silakan deposit.");
+      window.location.href = "/NEWW/MEMBER/dashboard.html";
+      return;
+    }
+    saldo -= bet;
+    updateUI();
+
+    const hasil = Array.from({ length: 3 }, () => symbols[Math.floor(Math.random() * symbols.length)]);
+    ["s1", "s2", "s3"].forEach((id, i) => document.getElementById(id).textContent = "⏳");
+    document.getElementById("result").textContent = "Memutar...";
+
+    setTimeout(() => {
+      hasil.forEach((simbol, i) => document.getElementById("s" + (i + 1)).textContent = simbol);
+      let hadiah = 0;
+      if (hasil[0] === hasil[1] && hasil[1] === hasil[2]) hadiah = bet * 5;
+      else if (hasil[0] === hasil[1] || hasil[1] === hasil[2] || hasil[0] === hasil[2]) hadiah = bet * 2;
+
+      if (hadiah > 0) {
+        saldo += hadiah;
+        document.getElementById("result").textContent = `🎉 Menang! +${hadiah}`;
+      } else {
+        document.getElementById("result").textContent = "Zonk 😢";
       }
-    });
 
-    function updateUI() {
-      document.getElementById("saldo").textContent = saldo.toLocaleString();
-      d
+      updateUI();
+      db.collection("members").doc(user.docId).update({
+        saldo,
+        turnover: firebase.firestore.FieldValue.increment(bet),
+        currentGame: "Slot 3 Kolom",
+        lastPlayedAt: new Date()
+      });
+
+      if (saldo <= 0) {
+        alert("Saldo habis! Silakan deposit ulang.");
+        window.location.href = "/NEWW/MEMBER/dashboard.html";
+      } else if (autoRunning && --autoCount > 0) {
+        setTimeout(spin, 1000);
+      } else {
+        autoRunning = false;
+      }
+    }, 900);
+  }
+
+  function autoSpin(jumlah) {
+    if (autoRunning) return;
+    autoCount = jumlah;
+    autoRunning = true;
+    spin();
+  }
+</script>
+</body>
+</html>
