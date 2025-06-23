@@ -1,159 +1,346 @@
 <!DOCTYPE html>
-<html lang="id">
+More actions
+
+<html lang="en">
+
 <head>
+
   <meta charset="UTF-8" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
   <title>Dashboard Member</title>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap" rel="stylesheet">
+
   <style>
+
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap');
+
+
+
     body {
+
       font-family: 'Orbitron', sans-serif;
+
       background: linear-gradient(145deg, #0d0d0d, #1c1c1c);
+
       color: #fff;
+
       margin: 0;
+
       padding: 0;
+
       display: flex;
+
       flex-direction: column;
+
       align-items: center;
+
       min-height: 100vh;
+
     }
+
+
+
     header {
+
       padding: 30px 20px 10px;
+
       text-align: center;
+
     }
+
+
+
     h1 {
+
       font-size: 32px;
+
       color: #f5c518;
+
       text-shadow: 0 0 10px #f5c51888;
+
     }
+
+
+
     .card {
+
       background: #222;
+
       padding: 25px;
+
       border-radius: 16px;
+
       max-width: 480px;
+
       width: 90%;
+
       box-shadow: 0 0 20px #00000066;
+
       text-align: left;
+
       margin-top: 20px;
+
     }
+
+
+
     .card p {
+
       margin: 8px 0;
+
       font-size: 15px;
+
     }
+
+
+
     .highlight {
+
       font-weight: bold;
+
       color: #f5c518;
+
     }
+
+
+
     .saldo-box {
+
       margin-top: 12px;
+
       background: #333;
+
       padding: 12px 16px;
+
       border-radius: 10px;
+
       font-size: 16px;
+
       color: #f5c518;
+
     }
+
+
+
     .actions {
+
       display: flex;
+
       flex-wrap: wrap;
+
       justify-content: center;
+
       gap: 12px;
+
       margin-top: 30px;
+
     }
+
+
+
     .btn {
+
       padding: 12px 24px;
+
       background-color: #f5c518;
+
       border: none;
+
       border-radius: 10px;
+
       font-weight: bold;
+
       color: #111;
+
       cursor: pointer;
+
       transition: 0.2s;
+
       box-shadow: 0 3px 6px #000;
+
       text-decoration: none;
+
     }
+
+
+
     .btn:hover {
+
       background-color: #ffe44d;
+
       transform: scale(1.05);
+
     }
+
+
+
     .logout {
+
       margin: 30px 0 10px;
+
       font-size: 14px;
+
       color: #aaa;
+
       cursor: pointer;
+
     }
+
+
+
     .logout:hover {
+
       text-decoration: underline;
+
       color: red;
+
     }
+
   </style>
 
+
+
+
   <!-- Firebase SDK -->
+
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+  <script>
+
+    const firebaseConfig = {
+
+      apiKey: "AIzaSyA2F9bh-M-XbBYj14j2i93qkZiAgQHyY1I",
+
+      authDomain: "slotkw-f05d1.firebaseapp.com",
+
+      projectId: "slotkw-f05d1",
+
+      storageBucket: "slotkw-f05d1.appspot.com",
+
+      messagingSenderId: "2853362042",
+
+      appId: "1:2853362042:web:2253bf70a2bda70f56dec3"
+
+    };
+
+    firebase.initializeApp(firebaseConfig);
+
+    const db = firebase.firestore();
+
+  </script>
+
 </head>
+
 <body>
 
   <header>
+
     <h1>🎮 Dashboard Member</h1>
+
   </header>
+
+
 
   <div class="card" id="userInfo">Memuat data...</div>
 
+
+
   <div class="actions">
-    <a class="btn" href="GAME/index.html">🎰 Slot 3 Kolom</a>
-    <a class="btn" href="GAME/GAME1.html">🎰 Slot 5 Kolom</a>
-    <a class="btn" href="GAME/Ikan.html">🎯 Tembak Ikan</a>
-    <a class="btn" href="deposit.html">💰 Deposit</a>
-    <a class="btn" href="withdraw.html">💸 Withdraw</a>
+
+    <a class="btn" href="/NEWW/GAME/index.html">🎰 Slot 3 Kolom</a>
+
+    <a class="btn" href="/NEWW/GAME/GAME1.html">🎰 Slot 5 Kolom</a>
+
+
+    <a class="btn" href="/NEWW/GAME/Ikan.html">🎯 Tembak Ikan</a>
+
+    <a class="btn" href="/NEWW/deposit.html">💰 Deposit</a>
+
+    <a class="btn" href="/NEWW/withdraw.html">💸 Withdraw</a>
+
   </div>
+
+
 
   <div class="logout" onclick="logout()">🚪 Logout</div>
 
+
+
   <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyA2F9bh-M-XbBYj14j2i93qkZiAgQHyY1I",
-      authDomain: "slotkw-f05d1.firebaseapp.com",
-      projectId: "slotkw-f05d1",
-      storageBucket: "slotkw-f05d1.appspot.com",
-      messagingSenderId: "2853362042",
-      appId: "1:2853362042:web:2253bf70a2bda70f56dec3"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
 
     const user = JSON.parse(sessionStorage.getItem("loggedInUser"));
 
+
+
     if (!user || !user.id) {
+
       alert("Anda belum login!");
+
       window.location.href = "../index.html";
+
     } else {
+
+
+      // ✅ Gunakan real-time listener untuk update saldo otomatis
+
       db.collection("members").doc(user.id).onSnapshot(doc => {
+
         if (doc.exists) {
+
           const data = doc.data();
+
           document.getElementById("userInfo").innerHTML = `
+
             <p>👤 Username: <span class="highlight">${data.username}</span></p>
+
             <p>💳 Nama Rekening: ${data.namaRek}</p>
+
             <p>🔢 No Rekening: ${data.norek}</p>
+
             <p>📱 No HP: ${data.hp}</p>
+
             <div class="saldo-box">💰 Saldo: <b>Rp ${data.saldo?.toLocaleString() || '0'}</b></div>
+
           `;
+
           sessionStorage.setItem("saldo", data.saldo || 0);
+
         } else {
+
           alert("Data member tidak ditemukan.");
+
           window.location.href = "../index.html";
+
         }
+
       }, err => {
+
         console.error("Gagal memuat data member:", err);
+
         alert("Gagal mengambil data. Silakan coba lagi.");
+
       });
+
     }
 
+
+
     function logout() {
+
       sessionStorage.clear();
+
       alert("Logout berhasil!");
+
       window.location.href = "../index.html";
+
     }
+
   </script>
 
 </body>
+
 </html>
+0 commit commentsComments0
