@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Form Deposit</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background: #0f0f0f;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .card {
+      background: #222;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 0 15px #000;
+      max-width: 400px;
+      width: 100%;
+    }
+    .card h2 {
+      color: #f5c518;
+      margin-bottom: 15px;
+    }
+    .card p {
+      margin: 5px 0;
+    }
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 12px;
+      border: none;
+      border-radius: 6px;
+    }
+    input {
+      background: #333;
+      color: #fff;
+    }
+    button {
+      background: #f5c518;
+      color: #111;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #ffe44d;
+    }
+  </style>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyA2F9bh-M-XbBYj14j2i93qkZiAgQHyY1I",
+      authDomain: "slotkw-f05d1.firebaseapp.com",
+      projectId: "slotkw-f05d1",
+      storageBucket: "slotkw-f05d1.appspot.com",
+      messagingSenderId: "2853362042",
+      appId: "1:2853362042:web:2253bf70a2bda70f56dec3"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+  </script>
+</head>
+<body>
+  <div class="card">
+    <h2>Form Deposit</h2>
+    <div id="rekeningInfo">Memuat rekening admin...</div>
+
+    <input type="number" id="nominal" placeholder="Nominal Deposit (Rp)">
+    <button onclick="kirimDeposit()">Kirim Bukti Deposit</button>
+  </div>
+
+  <script>
+    const user = JSON.parse(sessionStorage.getItem("loggedInUser"));
+    if (!user) {
+      alert("Anda belum login!");
+      window.location.href = "index.html";
+    }
+
+    db.collection("rekening").doc("rekening").get().then(doc => {
+      if (doc.exists) {
+        const data = doc.data();
+        document.getElementById("rekeningInfo").innerHTML = `
+          <p>Bank: <b>${data.BANK}</b></p>
+          <p>Nama: <b>${data.nama}</b></p>
+          <p>No Rekening: <b>${data.norek}</b></p>
+          <p style="margin-top:12px; font-size: 13px; color:#aaa;">Silakan transfer ke rekening di atas lalu klik tombol di bawah.</p>
+        `;
+      }
+    });
+
+    function kirimDeposit() {
+      const nominal = parseInt(document.getElementById("nominal").value);
+      if (!nominal || nominal < 1000) {
+        alert("Masukkan nominal yang valid.");
+        return;
+      }
+
+      db.collection("deposits").add({
+        userId: user.id,
+        username: user.username,
+        nominal,
+        status: "PENDING",
+        createdAt: new Date()
+      }).then(() => {
+        alert("Permintaan deposit dikirim. Tunggu konfirmasi admin.");
+        window.location.href = "MEMBER/dashboard.html";
+      }).catch(err => {
+        alert("Gagal menyimpan permintaan deposit.");
+        console.error(err);
+      });
+    }
+  </script>
+</body>
+</html>
