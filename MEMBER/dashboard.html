@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard Member</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap');
+
+    body {
+      font-family: 'Orbitron', sans-serif;
+      background: linear-gradient(145deg, #0d0d0d, #1c1c1c);
+      color: #fff;
+      margin: 0;
+      padding: 40px;
+      text-align: center;
+    }
+
+    h1 {
+      color: #f5c518;
+      text-shadow: 0 0 8px #f5c51888;
+      margin-bottom: 30px;
+    }
+
+    .game-button {
+      display: inline-block;
+      padding: 15px 30px;
+      margin: 15px;
+      font-size: 18px;
+      font-weight: bold;
+      background: #f5c518;
+      color: #111;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: 0.2s;
+      box-shadow: 0 3px 6px #000;
+      text-decoration: none;
+    }
+
+    .game-button:hover {
+      background: #ffe44d;
+      transform: scale(1.05);
+    }
+
+    .logout {
+      margin-top: 40px;
+      font-size: 16px;
+      color: #aaa;
+      cursor: pointer;
+    }
+
+    .logout:hover {
+      text-decoration: underline;
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎮 Selamat Datang di Member Area</h1>
+  <p>Pilih game yang ingin kamu mainkan:</p>
+
+  <a class="game-button" href="/NEWW/Game1/">🎰 Slot 3 Kolom</a>
+  <a class="game-button" href="/NEWW/Game2/">🎰 Slot 5 Kolom</a>
+
+  <div class="logout" onclick="logout()">🚪 Logout</div>
+
+  <script>
+    function logout() {
+      alert("Logout berhasil!");
+      window.location.href = "index.html";
+    }
+  </script>
+</body>
+</html>
