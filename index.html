@@ -85,6 +85,9 @@
       <input type="text" placeholder="Username Baru" id="regUser" />
       <input type="password" placeholder="Password" id="regPass" />
       <input type="password" placeholder="Ulangi Password" id="regPass2" />
+      <input type="text" placeholder="Nama Rekening" id="regNama" />
+      <input type="text" placeholder="Nomor Rekening" id="regNorek" />
+      <input type="text" placeholder="Nomor HP" id="regHp" />
       <button onclick="register()">Daftar</button>
       <div class="toggle" onclick="toggleForm()">Sudah punya akun? Login</div>
     </div>
@@ -111,23 +114,27 @@
       const user = document.getElementById("loginUser").value;
       const pass = document.getElementById("loginPass").value;
 
-      if (!user || !pass) {
-        alert("Harap isi semua kolom!");
-        return;
-      }
+      let users = JSON.parse(localStorage.getItem("users")) || [];
 
-      // Simulasi login, tanpa backend
-      // Kalau kamu punya sistem backend, proses di sini
-      alert(`Login berhasil: ${user}`);
-      window.location.href = "dashboard.html"; // setelah login, pindah ke dashboard
+      const found = users.find(u => u.username === user && u.password === pass);
+      if (found) {
+        alert(`Login sukses, Selamat datang ${user}`);
+        sessionStorage.setItem("loggedInUser", user);
+        window.location.href = "dashboard.html";
+      } else {
+        alert("Login gagal. Cek username dan password.");
+      }
     }
 
     function register() {
       const user = document.getElementById("regUser").value;
       const pass = document.getElementById("regPass").value;
       const pass2 = document.getElementById("regPass2").value;
+      const nama = document.getElementById("regNama").value;
+      const norek = document.getElementById("regNorek").value;
+      const hp = document.getElementById("regHp").value;
 
-      if (!user || !pass || !pass2) {
+      if (!user || !pass || !pass2 || !nama || !norek || !hp) {
         alert("Semua kolom harus diisi!");
         return;
       }
@@ -137,8 +144,24 @@
         return;
       }
 
-      // Simulasi daftar
-      alert(`Akun berhasil dibuat: ${user}`);
+      let users = JSON.parse(localStorage.getItem("users")) || [];
+
+      if (users.find(u => u.username === user)) {
+        alert("Username sudah terdaftar!");
+        return;
+      }
+
+      users.push({
+        username: user,
+        password: pass,
+        namaRek: nama,
+        norek: norek,
+        hp: hp
+      });
+
+      localStorage.setItem("users", JSON.stringify(users));
+
+      alert(`Akun ${user} berhasil dibuat!`);
       toggleForm();
     }
   </script>
