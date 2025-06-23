@@ -89,7 +89,13 @@
     let autoShoot = false;
     let fishes = [];
     let bullets = [];
-    const emojis = ["🐟", "🐠", "🐡", "🦈", "🐬"];
+    const fishTypes = [
+      { emoji: "🐟", size: 32, reward: 2 },
+      { emoji: "🐠", size: 36, reward: 2.5 },
+      { emoji: "🐡", size: 40, reward: 3 },
+      { emoji: "🐊", size: 48, reward: 5 },
+      { emoji: "🦟", size: 64, reward: 10 } // jackpot
+    ];
 
     const user = JSON.parse(sessionStorage.getItem("loggedInUser"));
     if (!user || !user.id) {
@@ -125,9 +131,9 @@
     }
 
     function spawnFish() {
-      const emoji = emojis[Math.floor(Math.random() * emojis.length)];
-      const y = Math.random() * (height - 60) + 30;
-      fishes.push({ x: -60, y, speed: Math.random() * 2 + 1, emoji });
+      const fish = fishTypes[Math.floor(Math.random() * fishTypes.length)];
+      const y = Math.random() * (height - fish.size) + fish.size / 2;
+      fishes.push({ x: -60, y, speed: Math.random() * 2 + 1, ...fish });
     }
 
     function shoot(x, y) {
@@ -142,7 +148,7 @@
       let count = 30;
       const interval = setInterval(() => {
         ctx.clearRect(x - 10, y - 30, 40, 30);
-        drawText("🪙", x, y - count, 24);
+        drawText("\ud83e\ude99", x, y - count, 24);
         count += 3;
         if (count > 60) clearInterval(interval);
       }, 30);
@@ -150,9 +156,10 @@
 
     function update() {
       ctx.clearRect(0, 0, width, height);
+
       fishes.forEach((fish, i) => {
         fish.x += fish.speed;
-        drawText(fish.emoji, fish.x, fish.y);
+        drawText(fish.emoji, fish.x, fish.y, fish.size);
         if (fish.x > width + 60) fishes.splice(i, 1);
       });
 
@@ -163,21 +170,23 @@
         const speed = 10;
         b.x += (dx / dist) * speed;
         b.y += (dy / dist) * speed;
-        drawText("🔫", b.x, b.y);
+        drawText("\ud83d\udd2b", b.x, b.y);
 
+        let hit = false;
         fishes.forEach((fish, j) => {
-          if (Math.abs(b.x - fish.x) < 30 && Math.abs(b.y - fish.y) < 30) {
-            fishes.splice(j, 1);
-            bullets.splice(i, 1);
-            const hadiah = bet * 2;
-            saldo += hadiah;
+          if (Math.abs(b.x - fish.x) < fish.size / 2 && Math.abs(b.y - fish.y) < fish.size / 2) {
+            saldo += Math.floor(bet * fish.reward);
             updateSaldoUI();
             updateFirestore();
             drawCoin(fish.x, fish.y);
+            fishes.splice(j, 1);
+            hit = true;
           }
         });
 
-        if (b.x < 0 || b.x > width || b.y < 0 || b.y > height) bullets.splice(i, 1);
+        if (hit || Math.abs(dx) < 5 && Math.abs(dy) < 5 || b.x < 0 || b.x > width || b.y < 0 || b.y > height) {
+          bullets.splice(i, 1);
+        }
       });
 
       requestAnimationFrame(update);
@@ -198,8 +207,7 @@
     }
 
     canvas.addEventListener("click", (e) => shoot(e.clientX, e.clientY));
-
-    setInterval(spawnFish, 1000);
+    setInterval(spawnFish, 800);
     setInterval(autoShootFish, 500);
     update();
 
