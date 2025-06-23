@@ -9,49 +9,77 @@
 
     body {
       font-family: 'Orbitron', sans-serif;
-      background: linear-gradient(145deg, #0d0d0d, #1c1c1c);
+      background: linear-gradient(135deg, #0d0d0d, #1c1c1c);
       color: #fff;
       margin: 0;
-      padding: 40px;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    header {
+      padding: 30px 20px 10px;
       text-align: center;
     }
 
     h1 {
+      font-size: 32px;
       color: #f5c518;
-      text-shadow: 0 0 8px #f5c51888;
-      margin-bottom: 20px;
+      text-shadow: 0 0 10px #f5c51888;
     }
 
-    .info {
-      margin-bottom: 30px;
-      font-size: 16px;
-      line-height: 1.6;
+    .card {
+      background: #222;
+      padding: 25px;
+      border-radius: 16px;
+      max-width: 480px;
+      width: 90%;
+      box-shadow: 0 0 20px #00000066;
+      text-align: left;
+      margin-top: 20px;
     }
 
-    .game-button {
-      display: inline-block;
-      padding: 15px 30px;
-      margin: 15px;
-      font-size: 18px;
+    .card p {
+      margin: 8px 0;
+      font-size: 15px;
+    }
+
+    .highlight {
       font-weight: bold;
-      background: #f5c518;
-      color: #111;
+      color: #f5c518;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 25px;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      background-color: #f5c518;
       border: none;
-      border-radius: 12px;
+      border-radius: 10px;
+      font-weight: bold;
+      color: #111;
       cursor: pointer;
       transition: 0.2s;
       box-shadow: 0 3px 6px #000;
       text-decoration: none;
     }
 
-    .game-button:hover {
-      background: #ffe44d;
+    .btn:hover {
+      background-color: #ffe44d;
       transform: scale(1.05);
     }
 
     .logout {
       margin-top: 40px;
-      font-size: 16px;
+      font-size: 14px;
       color: #aaa;
       cursor: pointer;
     }
@@ -62,7 +90,7 @@
     }
   </style>
 
-  <!-- Firebase SDK (compat) -->
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <script>
@@ -70,24 +98,29 @@
       apiKey: "AIzaSyA2F9bh-M-XbBYj14j2i93qkZiAgQHyY1I",
       authDomain: "slotkw-f05d1.firebaseapp.com",
       projectId: "slotkw-f05d1",
-      storageBucket: "slotkw-f05d1.firebasestorage.app",
+      storageBucket: "slotkw-f05d1.appspot.com",
       messagingSenderId: "2853362042",
-      appId: "1:2853362042:web:2253bf70a2bda70f56dec3",
-      measurementId: "G-230M21LKWM"
+      appId: "1:2853362042:web:2253bf70a2bda70f56dec3"
     };
-
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
   </script>
 </head>
 <body>
-  <h1>🎮 Member Area</h1>
-  <div id="userInfo" class="info">Memuat data...</div>
+  <header>
+    <h1>🎮 Dashboard Member</h1>
+  </header>
 
-  <p>Pilih game yang ingin kamu mainkan:</p>
+  <div class="card" id="userInfo">
+    Memuat data...
+  </div>
 
-  <a class="game-button" href="/NEWW/GAME/index.html">🎰 Slot 3 Kolom</a>
-  <a class="game-button" href="/NEWW/GAME/GAME1.html">🎰 Slot 5 Kolom</a>
+  <div class="actions">
+    <a class="btn" href="/NEWW/GAME/index.html">🎰 Slot 3 Kolom</a>
+    <a class="btn" href="/NEWW/GAME/GAME1.html">🎰 Slot 5 Kolom</a>
+    <a class="btn" href="/NEWW/deposit.html">💰 Deposit</a>
+    <a class="btn" href="/NEWW/withdraw.html">💸 Withdraw</a>
+  </div>
 
   <div class="logout" onclick="logout()">🚪 Logout</div>
 
@@ -102,22 +135,23 @@
         if (doc.exists) {
           const data = doc.data();
           document.getElementById("userInfo").innerHTML = `
-            👤 Username: <b>${data.username}</b><br>
-            💳 Nama Rekening: ${data.namaRek}<br>
-            🔢 No Rekening: ${data.norek}<br>
-            📱 No HP: ${data.hp}<br>
-            💰 Saldo: <b>Rp ${data.saldo.toLocaleString()}</b>
+            <p>👤 Username: <span class="highlight">${data.username}</span></p>
+            <p>💳 Nama Rekening: ${data.namaRek}</p>
+            <p>🔢 No Rekening: ${data.norek}</p>
+            <p>📱 No HP: ${data.hp}</p>
+            <p>💰 Saldo: <span class="highlight">Rp ${data.saldo?.toLocaleString() || '0'}</span></p>
           `;
 
-          // Simpan saldo ke sessionStorage (biar bisa dipakai di game)
-          sessionStorage.setItem("saldo", data.saldo);
+          sessionStorage.setItem("saldo", data.saldo || 0);
+        } else {
+          alert("Data member tidak ditemukan.");
+          window.location.href = "../index.html";
         }
       });
     }
 
     function logout() {
-      sessionStorage.removeItem("loggedInUser");
-      sessionStorage.removeItem("saldo");
+      sessionStorage.clear();
       alert("Logout berhasil!");
       window.location.href = "../index.html";
     }
