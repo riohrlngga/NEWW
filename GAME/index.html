@@ -6,38 +6,33 @@
   <title>Slot Game KW</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap');
-
     body {
       font-family: 'Orbitron', sans-serif;
-      text-align: center;
       background: linear-gradient(145deg, #0d0d0d, #1c1c1c);
       color: #fff;
+      text-align: center;
       margin: 0;
       padding: 0;
     }
-
     .container {
       max-width: 600px;
       margin: auto;
       padding: 40px 20px;
     }
-
     h1 {
       font-size: 32px;
       color: #f5c518;
       margin-bottom: 30px;
       text-shadow: 0 0 10px #f5c518;
     }
-
     #slot {
       display: flex;
       justify-content: center;
       margin-bottom: 20px;
     }
-
     #slot span {
       font-size: 60px;
-      margin: 0 15px;
+      margin: 0 10px;
       padding: 15px;
       width: 70px;
       height: 70px;
@@ -47,12 +42,10 @@
       border-radius: 10px;
       box-shadow: 0 0 10px #f5c51855;
     }
-
     p {
       font-size: 18px;
       margin: 10px 0;
     }
-
     button {
       padding: 12px 25px;
       font-size: 18px;
@@ -61,41 +54,25 @@
       border-radius: 8px;
       background-color: #f5c518;
       color: #111;
+      font-weight: bold;
       cursor: pointer;
       transition: 0.2s;
-      font-weight: bold;
       box-shadow: 0 3px 6px #000;
     }
-
     button:hover {
       background-color: #ffe44d;
       transform: scale(1.05);
     }
-
     #result {
       font-size: 20px;
       font-weight: bold;
       margin-top: 20px;
-      color: #f5f5f5;
     }
   </style>
 
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyA2F9bh-M-XbBYj14j2i93qkZiAgQHyY1I",
-      authDomain: "slotkw-f05d1.firebaseapp.com",
-      projectId: "slotkw-f05d1",
-      storageBucket: "slotkw-f05d1.appspot.com",
-      messagingSenderId: "2853362042",
-      appId: "1:2853362042:web:2253bf70a2bda70f56dec3",
-      measurementId: "G-230M21LKWM"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-  </script>
 </head>
 <body>
   <div class="container">
@@ -108,11 +85,10 @@
     </div>
 
     <p id="result">Klik SPIN untuk bermain</p>
-
-    <p>💰 Saldo: <span id="saldo">-</span></p>
+    <p>💰 Saldo: <span id="saldo">...</span></p>
     <p>🎯 Taruhan: <span id="taruhan">250</span></p>
 
-    <div style="margin: 10px 0;">
+    <div>
       <button onclick="ubahTaruhan(-50)">-</button>
       <button onclick="ubahTaruhan(50)">+</button>
     </div>
@@ -129,110 +105,39 @@
   </div>
 
   <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyA2F9bh-M-XbBYj14j2i93qkZiAgQHyY1I",
+      authDomain: "slotkw-f05d1.firebaseapp.com",
+      projectId: "slotkw-f05d1",
+      storageBucket: "slotkw-f05d1.appspot.com",
+      messagingSenderId: "2853362042",
+      appId: "1:2853362042:web:2253bf70a2bda70f56dec3"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
     const symbols = ["🍒", "🍋", "🍊", "💎", "🔔", "🍇"];
-    let autoCount = 0;
-    let autoDelay = 1200;
-    let autoRunning = false;
     let bet = 250;
+    let saldo = 0;
+    let autoCount = 0;
+    let autoRunning = false;
 
     const user = JSON.parse(sessionStorage.getItem("loggedInUser"));
-    let saldo = Number(user?.saldo) || 0;
-
-    document.getElementById("saldo").textContent = saldo;
-    document.getElementById("taruhan").textContent = bet;
-
-    function updateSaldoFirestore(username, saldoBaru) {
-      db.collection("members").where("username", "==", username).get().then(snapshot => {
-        if (!snapshot.empty) {
-          const docId = snapshot.docs[0].id;
-          db.collection("members").doc(docId).update({ saldo: saldoBaru });
-        }
-      }).catch(err => console.error("Firestore update error:", err));
+    if (!user || !user.username) {
+      alert("Anda belum login!");
+      window.location.href = "/NEWW/index.html";
     }
 
-    function spin(auto = false) {
-      if (saldo < bet) {
-        alert("Saldo tidak cukup. Silakan deposit.");
-        window.location.href = "/NEWW/MEMBER/dashboard.html";
-        return;
+    // Ambil saldo real dari Firestore
+    db.collection("members").where("username", "==", user.username).get().then(snapshot => {
+      if (!snapshot.empty) {
+        const doc = snapshot.docs[0];
+        user.docId = doc.id;
+        saldo = doc.data().saldo || 0;
+        updateUI();
       }
+    });
 
-      saldo -= bet;
-
-      const r1 = symbols[Math.floor(Math.random() * symbols.length)];
-      const r2 = symbols[Math.floor(Math.random() * symbols.length)];
-      const r3 = symbols[Math.floor(Math.random() * symbols.length)];
-
-      document.getElementById("s1").textContent = "⏳";
-      document.getElementById("s2").textContent = "⏳";
-      document.getElementById("s3").textContent = "⏳";
-      document.getElementById("result").textContent = "Memutar...";
-
-      setTimeout(() => document.getElementById("s1").textContent = r1, 300);
-      setTimeout(() => document.getElementById("s2").textContent = r2, 600);
-
-      setTimeout(() => {
-        document.getElementById("s3").textContent = r3;
-
-        let hadiah = 0;
-        let result = "Zonk 😢";
-
-        if (r1 === "💎" && r2 === "💎" && r3 === "💎") {
-          hadiah = bet * 8;
-          result = `⚡ MAXWIN 💎 +${hadiah}`;
-        } else if (r1 === r2 && r2 === r3) {
-          hadiah = bet * 4;
-          result = `✨ Jackpot 🔔 +${hadiah}`;
-        } else if (r1 === r2 || r2 === r3 || r1 === r3) {
-          hadiah = bet * 2;
-          result = `👍 Menang Kecil +${hadiah}`;
-        }
-
-        saldo += hadiah;
-
-        // Update session dan database
-        sessionStorage.setItem("saldo", saldo);
-        document.getElementById("saldo").textContent = saldo;
-        document.getElementById("result").textContent = result;
-
-        if (user && user.username) {
-          updateSaldoFirestore(user.username, saldo);
-        }
-
-        if (saldo <= 0) {
-          alert("Saldo habis. Silakan deposit ulang.");
-          window.location.href = "/NEWW/MEMBER/dashboard.html";
-          return;
-        }
-
-        if (autoRunning) {
-          autoCount--;
-          setTimeout(jalankanAutoSpin, autoDelay);
-        }
-      }, 900);
-    }
-
-    function ubahTaruhan(nilai) {
-      bet += nilai;
-      if (bet < 100) bet = 100;
-      if (bet > 10000) bet = 10000;
-      document.getElementById("taruhan").textContent = bet;
-    }
-
-    function autoSpin(jumlah) {
-      if (autoRunning) return;
-      autoCount = jumlah;
-      autoRunning = true;
-      jalankanAutoSpin();
-    }
-
-    function jalankanAutoSpin() {
-      if (autoCount <= 0) {
-        autoRunning = false;
-        return;
-      }
-      spin(true);
-    }
-  </script>
-</body>
-</html>
+    function updateUI() {
+      document.getElementById("saldo").textContent = saldo.toLocaleString();
+      d
