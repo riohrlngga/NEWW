@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>🎯 Game Tembak Ikan KW</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: #001f3f;
+      font-family: Arial, sans-serif;
+      touch-action: manipulation;
+    }
+    canvas {
+      display: block;
+      background: #0074D9;
+    }
+    .ui {
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      z-index: 10;
+    }
+    .ui button {
+      padding: 10px 16px;
+      font-size: 14px;
+      border: none;
+      border-radius: 6px;
+      background: gold;
+      color: #111;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .saldo {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      color: white;
+      font-weight: bold;
+      background: rgba(0,0,0,0.5);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="game"></canvas>
+  <div class="saldo" id="saldo">Saldo: 10000</div>
+  <div class="ui">
+    <button onclick="setBet(100)">100</button>
+    <button onclick="setBet(500)">500</button>
+    <button onclick="setBet(1000)">1000</button>
+    <button onclick="setBet(5000)">5000</button>
+    <button onclick="setBet(10000)">10000</button>
+    <button onclick="setBet(20000)">20000</button>
+    <button onclick="toggleAutoShoot()">🎯 Auto Shoot</button>
+  </div>
+  <script>
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+    let width = window.innerWidth;
+    let height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+
+    let saldo = 10000;
+    let bet = 100;
+    let autoShoot = false;
+    let fishes = [];
+    let bullets = [];
+    const emojis = ["🐟", "🐠", "🐡", "🦈", "🐬"];
+
+    function drawText(text, x, y, size = 24) {
+      ctx.font = `${size}px Arial`;
+      ctx.textAlign = "center";
+      ctx.fillStyle = "white";
+      ctx.fillText(text, x, y);
+    }
+
+    function spawnFish() {
+      const emoji = emojis[Math.floor(Math.random() * emojis.length)];
+      const y = Math.random() * (height - 60) + 30;
+      fishes.push({ x: -60, y, speed: Math.random() * 2 + 1, emoji });
+    }
+
+    function shoot(x, y) {
+      if (saldo < bet) return;
+      saldo -= bet;
+      document.getElementById("saldo").innerText = `Saldo: ${saldo}`;
+      bullets.push({ x: width / 2, y: height - 30, targetX: x, targetY: y });
+    }
+
+    function drawCoin(x, y) {
+      let count = 30;
+      const interval = setInterval(() => {
+        ctx.clearRect(x - 10, y - 30, 40, 30);
+        drawText("🪙", x, y - count, 24);
+        count += 3;
+        if (count > 60) clearInterval(interval);
+      }, 30);
+    }
+
+    function update() {
+      ctx.clearRect(0, 0, width, height);
+
+      // Draw fishes
+      fishes.forEach((fish, i) => {
+        fish.x += fish.speed;
+        drawText(fish.emoji, fish.x, fish.y);
+        if (fish.x > width + 60) fishes.splice(i, 1);
+      });
+
+      // Draw bullets
+      bullets.forEach((b, i) => {
+        const dx = b.targetX - b.x;
+        const dy = b.targetY - b.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const speed = 10;
+        b.x += (dx / dist) * speed;
+        b.y += (dy / dist) * speed;
+        drawText("🔫", b.x, b.y);
+
+        fishes.forEach((fish, j) => {
+          if (Math.abs(b.x - fish.x) < 30 && Math.abs(b.y - fish.y) < 30) {
+            fishes.splice(j, 1);
+            bullets.splice(i, 1);
+            const hadiah = bet * 2;
+            saldo += hadiah;
+            drawCoin(fish.x, fish.y);
+            document.getElementById("saldo").innerText = `Saldo: ${saldo}`;
+          }
+        });
+
+        if (b.x < 0 || b.x > width || b.y < 0 || b.y > height) bullets.splice(i, 1);
+      });
+
+      requestAnimationFrame(update);
+    }
+
+    function autoShootFish() {
+      if (!autoShoot || saldo < bet) return;
+      const target = fishes[Math.floor(Math.random() * fishes.length)];
+      if (target) shoot(target.x, target.y);
+    }
+
+    function toggleAutoShoot() {
+      autoShoot = !autoShoot;
+    }
+
+    function setBet(amount) {
+      bet = amount;
+    }
+
+    canvas.addEventListener("click", (e) => shoot(e.clientX, e.clientY));
+
+    setInterval(spawnFish, 1000);
+    setInterval(autoShootFish, 500);
+    update();
+
+    window.addEventListener("resize", () => {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = width;
+      canvas.height = height;
+    });
+  </script>
+</body>
+</html>
