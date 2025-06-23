@@ -5,86 +5,36 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Admin Dashboard - Data Member</title>
   <style>
-    body {
-      font-family: 'Arial', sans-serif;
-      background: #111;
-      color: #fff;
-      padding: 40px;
-    }
-    h1, h2 {
-      color: #f5c518;
-      margin-bottom: 20px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: #222;
-      border-radius: 10px;
-      overflow: hidden;
-    }
-    th, td {
-      padding: 12px;
-      border: 1px solid #444;
-      text-align: left;
-    }
-    th {
-      background: #333;
-    }
-    tr:nth-child(even) {
-      background: #2a2a2a;
-    }
-    tr:hover {
-      background: #383838;
-    }
-    .empty {
-      text-align: center;
-      padding: 20px;
-      color: #bbb;
-    }
+    body { font-family: 'Arial', sans-serif; background: #111; color: #fff; padding: 40px; }
+    h1, h2 { color: #f5c518; margin-bottom: 20px; }
+    table { width: 100%; border-collapse: collapse; background: #222; border-radius: 10px; overflow: hidden; }
+    th, td { padding: 12px; border: 1px solid #444; text-align: left; }
+    th { background: #333; }
+    tr:nth-child(even) { background: #2a2a2a; }
+    tr:hover { background: #383838; }
+    .empty { text-align: center; padding: 20px; color: #bbb; }
     .acc-button, .btn {
-      padding: 6px 12px;
-      background: #f5c518;
-      color: #111;
-      font-weight: bold;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 12px;
-      margin: 3px;
+      padding: 6px 12px; background: #f5c518; color: #111;
+      font-weight: bold; border: none; border-radius: 6px;
+      cursor: pointer; font-size: 12px; margin: 3px;
     }
-    .acc-button:hover, .btn:hover {
-      background: #ffe44d;
-    }
-    .logout {
-      margin-top: 30px;
-      display: inline-block;
-      color: #aaa;
-      font-size: 14px;
-      cursor: pointer;
-    }
-    .logout:hover {
-      text-decoration: underline;
-      color: red;
-    }
-    .section {
-      margin-top: 40px;
-    }
+    .acc-button:hover, .btn:hover { background: #ffe44d; }
+    .logout { margin-top: 30px; display: inline-block; color: #aaa; font-size: 14px; cursor: pointer; }
+    .logout:hover { text-decoration: underline; color: red; }
+    .section { margin-top: 40px; }
     input[type="text"], input[type="number"] {
-      padding: 6px;
-      border-radius: 5px;
-      border: none;
-      margin: 6px;
+      padding: 6px; border-radius: 5px; border: none; margin: 6px;
     }
   </style>
+
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 </head>
 <body>
+
 <script>
-  if (sessionStorage.getItem("isAdmin") !== "true") {
-    alert("Akses ditolak! Silakan login sebagai admin.");
-    window.location.href = "login.html";
-  }
   const firebaseConfig = {
     apiKey: "AIzaSyA2F9bh-M-XbBYj14j2i93qkZiAgQHyY1I",
     authDomain: "slotkw-f05d1.firebaseapp.com",
@@ -93,8 +43,32 @@
     messagingSenderId: "2853362042",
     appId: "1:2853362042:web:2253bf70a2bda70f56dec3"
   };
+
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
+  const auth = firebase.auth();
+
+  // Cek login dan admin
+  auth.onAuthStateChanged(async (user) => {
+    if (!user) {
+      alert("Silakan login terlebih dahulu.");
+      window.location.href = "login.html";
+      return;
+    }
+
+    const adminRef = db.collection("admins").doc(user.uid);
+    const adminSnap = await adminRef.get();
+
+    if (!adminSnap.exists) {
+      alert("Akses ditolak! Akun ini bukan admin.");
+      window.location.href = "unauthorized.html";
+      return;
+    }
+
+    // ✅ Lanjut render
+    renderUsers();
+    renderDeposits();
+  });
 </script>
 
 <h1>📋 Daftar Member Terdaftar</h1>
@@ -158,13 +132,11 @@
       tbody.innerHTML = `<tr><td colspan="13" class="empty">Belum ada member.</td></tr>`;
       return;
     }
-    let html = "";
-    let no = 1;
+    let html = "", no = 1;
     for (const doc of snapshot.docs) {
       const data = doc.data();
       if (!data.username.toLowerCase().includes(keyword)) continue;
-      let totalDeposit = 0;
-      let totalWithdraw = 0;
+      let totalDeposit = 0, totalWithdraw = 0;
       const depositSnap = await db.collection("deposits").where("username", "==", data.username).where("status", "==", "DITERIMA").get();
       depositSnap.forEach(d => totalDeposit += d.data().nominal || 0);
       const withdrawSnap = await db.collection("withdraws").where("username", "==", data.username).where("status", "==", "DITERIMA").get();
@@ -259,12 +231,11 @@
   }
 
   function logout() {
-    sessionStorage.clear();
-    window.location.href = "login.html";
+    auth.signOut().then(() => {
+      window.location.href = "login.html";
+    });
   }
-
-  renderUsers();
-  renderDeposits();
 </script>
+
 </body>
 </html>
