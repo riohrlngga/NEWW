@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -131,20 +131,26 @@
       window.location.href = "/NEWW/index.html";
     }
 
+    let docId = "";
+
     // Ambil saldo dari Firestore saat load
     db.collection("members").where("username", "==", user.username).get().then(snapshot => {
       if (!snapshot.empty) {
         const doc = snapshot.docs[0];
-        user.docId = doc.id;
+        docId = doc.id;
         saldo = doc.data().saldo || 0;
         updateSaldoUI();
       }
     });
 
     function updateSaldoFirestore() {
-      if (user?.docId) {
-        db.collection("members").doc(user.docId).update({ saldo });
-      }
+      if (!docId) return;
+      db.collection("members").doc(docId).update({
+        saldo,
+        currentGame: "Slot 5 Kolom",
+        lastPlayedAt: new Date(),
+        turnover: firebase.firestore.FieldValue.increment(bet)
+      });
     }
 
     function updateSaldoUI() {
@@ -170,14 +176,16 @@
       updateSaldoUI();
 
       const hasil = Array.from({ length: 5 }, () => symbols[Math.floor(Math.random() * symbols.length)]);
-      for (let i = 0; i < 5; i++) {
-        document.getElementById("s" + (i + 1)).textContent = "⏳";
+      for (let i = 1; i <= 5; i++) {
+        document.getElementById("s" + i).textContent = "⏳";
       }
 
       document.getElementById("result").textContent = "Memutar...";
 
       setTimeout(() => {
-        hasil.forEach((simbol, i) => document.getElementById("s" + (i + 1)).textContent = simbol);
+        hasil.forEach((simbol, i) => {
+          document.getElementById("s" + (i + 1)).textContent = simbol;
+        });
 
         let count = 1;
         let maxCount = 1;
@@ -206,13 +214,11 @@
         if (saldo <= 0) {
           alert("Saldo habis! Silakan deposit ulang.");
           window.location.href = "/NEWW/MEMBER/dashboard.html";
-        } else if (autoRunning) {
+        } else if (autoRunning && autoCount > 0) {
           autoCount--;
-          if (autoCount > 0) {
-            setTimeout(() => spin(), 1000);
-          } else {
-            autoRunning = false;
-          }
+          setTimeout(() => spin(), 1000);
+        } else {
+          autoRunning = false;
         }
       }, 800);
     }
