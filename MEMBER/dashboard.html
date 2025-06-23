@@ -6,10 +6,9 @@
   <title>Dashboard Member</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap');
-
     body {
       font-family: 'Orbitron', sans-serif;
-      background: linear-gradient(135deg, #0d0d0d, #1c1c1c);
+      background: linear-gradient(145deg, #0d0d0d, #1c1c1c);
       color: #fff;
       margin: 0;
       padding: 0;
@@ -118,8 +117,8 @@
   <div class="actions">
     <a class="btn" href="/NEWW/GAME/index.html">🎰 Slot 3 Kolom</a>
     <a class="btn" href="/NEWW/GAME/GAME1.html">🎰 Slot 5 Kolom</a>
-    <a class="btn" href="/NEWW/deposit.html">💰 Deposit</a>
-    <a class="btn" href="/NEWW/withdraw.html">💸 Withdraw</a>
+    <a class="btn" href="/NEWW/MEMBER/deposit.html">💰 Deposit</a>
+    <a class="btn" href="/NEWW/MEMBER/withdraw.html">💸 Withdraw</a>
   </div>
 
   <div class="logout" onclick="logout()">🚪 Logout</div>
@@ -141,7 +140,6 @@
             <p>📱 No HP: ${data.hp}</p>
             <p>💰 Saldo: <span class="highlight">Rp ${data.saldo?.toLocaleString() || '0'}</span></p>
           `;
-
           sessionStorage.setItem("saldo", data.saldo || 0);
         } else {
           alert("Data member tidak ditemukan.");
