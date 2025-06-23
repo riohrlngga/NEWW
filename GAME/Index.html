@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Slot Game 5 Kolom</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap');
+
+    body {
+      font-family: 'Orbitron', sans-serif;
+      text-align: center;
+      background: linear-gradient(145deg, #0d0d0d, #1c1c1c);
+      color: #fff;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 700px;
+      margin: auto;
+      padding: 40px 20px;
+    }
+
+    h1 {
+      font-size: 32px;
+      color: #f5c518;
+      margin-bottom: 30px;
+      text-shadow: 0 0 10px #f5c518;
+    }
+
+    #slot {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    #slot span {
+      font-size: 50px;
+      margin: 0 8px;
+      padding: 15px;
+      width: 60px;
+      height: 60px;
+      line-height: 60px;
+      background: #222;
+      border: 2px solid #f5c518;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #f5c51855;
+    }
+
+    p {
+      font-size: 18px;
+      margin: 10px 0;
+    }
+
+    button {
+      padding: 12px 25px;
+      font-size: 18px;
+      margin: 5px;
+      border: none;
+      border-radius: 8px;
+      background-color: #f5c518;
+      color: #111;
+      cursor: pointer;
+      transition: 0.2s;
+      font-weight: bold;
+      box-shadow: 0 3px 6px #000;
+    }
+
+    button:hover {
+      background-color: #ffe44d;
+      transform: scale(1.05);
+    }
+
+    #result {
+      font-size: 20px;
+      font-weight: bold;
+      margin-top: 20px;
+      color: #f5f5f5;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎰 SLOT KW 5 KOLOM</h1>
+
+    <div id="slot">
+      <span id="s1">❓</span>
+      <span id="s2">❓</span>
+      <span id="s3">❓</span>
+      <span id="s4">❓</span>
+      <span id="s5">❓</span>
+    </div>
+
+    <p id="result">Klik SPIN untuk bermain</p>
+
+    <p>💰 Saldo: <span id="saldo">5000</span></p>
+    <p>🎯 Taruhan: <span id="taruhan">250</span></p>
+
+    <div style="margin: 10px 0;">
+      <button onclick="ubahTaruhan(-50)">-</button>
+      <button onclick="ubahTaruhan(50)">+</button>
+    </div>
+
+    <button onclick="spin()">SPIN</button>
+
+    <div style="margin-top: 20px;">
+      <p>🔁 Auto Spin:</p>
+      <button onclick="autoSpin(10)">Auto 10</button>
+      <button onclick="autoSpin(30)">Auto 30</button>
+      <button onclick="autoSpin(50)">Auto 50</button>
+      <button onclick="autoSpin(100)">Auto 100</button>
+    </div>
+  </div>
+
+  <script>
+    let saldo = 5000;
+    let bet = 250;
+    const symbols = ["👻", "🤖", "💀", "⚡", "🎯", "👽", "🧲", "🪙", "🔥", "🧠", "🐲", "🦄"];
+
+    let autoCount = 0;
+    let autoDelay = 1200;
+    let autoRunning = false;
+
+    function spin(auto = false) {
+      if (saldo < bet) {
+        alert("Saldo tidak cukup!");
+        autoRunning = false;
+        return;
+      }
+
+      saldo -= bet;
+
+      const hasil = [];
+      for (let i = 0; i < 5; i++) {
+        hasil.push(symbols[Math.floor(Math.random() * symbols.length)]);
+      }
+
+      for (let i = 1; i <= 5; i++) {
+        document.getElementById("s" + i).textContent = "⏳";
+      }
+      document.getElementById("result").textContent = "Memutar...";
+
+      setTimeout(() => {
+        for (let i = 1; i <= 5; i++) {
+          document.getElementById("s" + i).textContent = hasil[i - 1];
+        }
+
+        let hadiah = 0;
+        let result = "Zonk 😢";
+
+        // Cek apakah ada 3 atau lebih simbol sama berurutan
+        let count = 1;
+        for (let i = 1; i < hasil.length; i++) {
+          if (hasil[i] === hasil[i - 1]) {
+            count++;
+            if (count >= 3) {
+              hadiah = bet * count;
+            }
+          } else {
+            count = 1;
+          }
+        }
+
+        if (hadiah > 0) {
+          saldo += hadiah;
+          result = `🎉 Menang x${hadiah / bet} +${hadiah}`;
+        }
+
+        document.getElementById("saldo").textContent = saldo;
+        document.getElementById("result").textContent = result;
+
+        if (autoRunning) {
+          autoCount--;
+          setTimeout(jalankanAutoSpin, autoDelay);
+        }
+      }, 800);
+    }
+
+    function ubahTaruhan(nilai) {
+      bet += nilai;
+      if (bet < 100) bet = 100;
+      if (bet > 10000) bet = 10000;
+      document.getElementById("taruhan").textContent = bet;
+    }
+
+    function autoSpin(jumlah) {
+      if (autoRunning) return;
+      autoCount = jumlah;
+      autoRunning = true;
+      jalankanAutoSpin();
+    }
+
+    function jalankanAutoSpin() {
+      if (autoCount <= 0) {
+        autoRunning = false;
+        return;
+      }
+      spin(true);
+    }
+  </script>
+</body>
+</html>
