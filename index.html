@@ -1,141 +1,452 @@
 <!DOCTYPE html>
+More actions
+
 <html lang="en">
+
 <head>
+
   <meta charset="UTF-8" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Dashboard Member - Slot KW</title>
+
+  <title>Login Member - Slot KW</title>
+
   <style>
+
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap');
+
     * { box-sizing: border-box; }
+
     body {
+
       font-family: 'Orbitron', sans-serif;
-      background: linear-gradient(145deg, #111, #1c1c1c);
+
+      background: linear-gradient(135deg, #111, #1c1c1c);
+
       color: #fff;
+
       margin: 0;
+
       padding: 0;
-      min-height: 100vh;
+
       display: flex;
-      flex-direction: column;
+
       align-items: center;
+
+      justify-content: center;
+
+      height: 100vh;
+
     }
 
-    header {
-      background: #222;
+    .container {
+
       width: 100%;
-      padding: 20px;
-      text-align: center;
-      box-shadow: 0 0 10px #000;
+
+      max-width: 400px;
+
+      background: #222;
+
+      padding: 30px;
+
+      border-radius: 15px;
+
+      box-shadow: 0 0 15px #f5c51855;
+
     }
 
-    header h1 {
-      margin: 0;
+    h1 {
+
+      text-align: center;
+
       color: #f5c518;
-      font-size: 24px;
+
+      margin-bottom: 20px;
+
     }
 
-    .saldo-box {
-      margin-top: 20px;
+    input {
+
+      width: 100%;
+
+      padding: 12px;
+
+      margin: 8px 0;
+
+      border: none;
+
+      border-radius: 8px;
+
       background: #333;
-      padding: 15px 30px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px #000;
-      font-size: 18px;
+
+      color: #fff;
+
+      font-size: 16px;
+
     }
 
-    .games {
-      margin-top: 30px;
-      width: 90%;
-      max-width: 500px;
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-    }
+    button {
 
-    .games a {
-      display: block;
-      padding: 15px;
-      text-align: center;
-      background: #f5c518;
+      width: 100%;
+
+      padding: 12px;
+
+      margin-top: 10px;
+
+      background-color: #f5c518;
+
       color: #111;
+
       font-weight: bold;
-      text-decoration: none;
-      border-radius: 10px;
-      box-shadow: 0 3px 5px #000;
-      transition: 0.2s;
-    }
 
-    .games a:hover {
-      background: #ffe44d;
-      transform: scale(1.03);
-    }
+      border: none;
 
-    .logout {
-      margin: 30px 0;
-      color: #aaa;
+      border-radius: 8px;
+
       cursor: pointer;
-      font-size: 14px;
+
+      transition: 0.2s;
+
     }
 
-    .logout:hover {
-      color: red;
-      text-decoration: underline;
+    button:hover {
+
+      background-color: #ffe44d;
+
     }
+
+    .toggle {
+
+      text-align: center;
+
+      margin-top: 15px;
+
+      cursor: pointer;
+
+      color: #aaa;
+
+    }
+
+    .toggle:hover {
+
+      text-decoration: underline;
+
+      color: #fff;
+
+    }
+
   </style>
 
-  <!-- Firebase SDK -->
+
+
+
+  <!-- Firebase SDK (compat version) -->
+
+
+  <!-- Firebase SDK (compat) -->
+
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
   <script>
+
     const firebaseConfig = {
+
       apiKey: "AIzaSyA2F9bh-M-XbBYj14j2i93qkZiAgQHyY1I",
+
       authDomain: "slotkw-f05d1.firebaseapp.com",
+
       projectId: "slotkw-f05d1",
-      storageBucket: "slotkw-f05d1.appspot.com",
+
+      storageBucket: "slotkw-f05d1.firebasestorage.app",
+
       messagingSenderId: "2853362042",
-      appId: "1:2853362042:web:2253bf70a2bda70f56dec3"
+
+      appId: "1:2853362042:web:2253bf70a2bda70f56dec3",
+
+      measurementId: "G-230M21LKWM"
+
     };
+
+
+
     firebase.initializeApp(firebaseConfig);
+
     const db = firebase.firestore();
 
-    const user = JSON.parse(sessionStorage.getItem("loggedInUser"));
-    if (!user || !user.id) {
-      alert("Silakan login terlebih dahulu.");
-      window.location.href = "../index.html";
-    }
-
-    let saldo = 0;
-
-    window.onload = () => {
-      db.collection("members").doc(user.id).get().then(doc => {
-        if (doc.exists) {
-          saldo = doc.data().saldo || 0;
-          document.getElementById("saldoDisplay").innerText = saldo.toLocaleString();
-        }
-      });
-    };
-
-    function logout() {
-      sessionStorage.clear();
-      window.location.href = "../index.html";
-    }
   </script>
+
 </head>
+
 <body>
-  <header>
-    <h1>🎮 Dashboard Member</h1>
-  </header>
 
-  <div class="saldo-box">
-    💰 Saldo Anda: Rp <span id="saldoDisplay">...</span>
+  <div class="container">
+
+    <h1 id="formTitle">Login Member</h1>
+
+
+
+    <div id="loginForm">
+
+      <input type="text" placeholder="Username" id="loginUser" />
+
+      <input type="password" placeholder="Password" id="loginPass" />
+
+      <button onclick="login()">Login</button>
+
+      <div class="toggle" onclick="toggleForm()">Belum punya akun? Daftar</div>
+
+    </div>
+
+
+
+    <div id="registerForm" style="display:none;">
+
+      <input type="text" placeholder="Username Baru" id="regUser" />
+
+      <input type="password" placeholder="Password" id="regPass" />
+
+      <input type="password" placeholder="Ulangi Password" id="regPass2" />
+
+      <input type="text" placeholder="Nama Rekening" id="regNama" />
+
+      <input type="text" placeholder="Nomor Rekening" id="regNorek" />
+
+      <input type="text" placeholder="Nomor HP" id="regHp" />
+
+      <button onclick="register()">Daftar</button>
+
+      <div class="toggle" onclick="toggleForm()">Sudah punya akun? Login</div>
+
+    </div>
+
   </div>
 
-  <div class="games">
-    <a class="btn" href="../GAME/index.html">🎰 Slot Classic</a>
-<a class="btn" href="../GAME/GAME1.html">🎰 Slot Modern</a>
-<a class="btn" href="../GAME/Ikan.html">🐟 Tembak Ikan</a>
 
-  </div>
 
-  <div class="logout" onclick="logout()">🚪 Logout</div>
+  <script>
+
+    function toggleForm() {
+
+      const login = document.getElementById("loginForm");
+
+      const reg = document.getElementById("registerForm");
+
+      const title = document.getElementById("formTitle");
+
+
+
+      if (login.style.display === "none") {
+
+        login.style.display = "block";
+
+        reg.style.display = "none";
+
+        title.textContent = "Login Member";
+
+      } else {
+
+        login.style.display = "none";
+
+        reg.style.display = "block";
+
+        title.textContent = "Daftar Member";
+
+      }
+
+    }
+
+
+
+    function login() {
+
+      const user = document.getElementById("loginUser").value.trim();
+
+      const pass = document.getElementById("loginPass").value.trim();
+
+
+
+      if (!user || !pass) {
+
+        alert("Harap isi semua kolom!");
+
+        return;
+
+      }
+
+
+
+      db.collection("members")
+
+        .where("username", "==", user)
+
+        .where("password", "==", pass)
+
+        .get()
+
+        .then(snapshot => {
+
+          if (snapshot.empty) {
+
+            alert("Login gagal. Username atau password salah.");
+
+          } else {
+
+
+            const data = snapshot.docs[0].data();
+
+
+            sessionStorage.setItem("loggedInUser", JSON.stringify(data));
+
+
+            const doc = snapshot.docs[0];
+
+
+            const data = doc.data();
+
+
+            sessionStorage.setItem("loggedInUser", JSON.stringify({
+
+
+              id: doc.id,
+
+
+              ...data
+
+
+            }));
+
+            alert(`Login sukses! Selamat datang, ${data.username}`);
+
+            window.location.href = "MEMBER/dashboard.html";
+
+          }
+
+        })
+
+        .catch(error => {
+
+          alert("Terjadi kesalahan saat login.");
+
+          console.error(error);
+
+        });
+
+    }
+
+
+
+    function register() {
+
+      const user = document.getElementById("regUser").value.trim();
+
+      const pass = document.getElementById("regPass").value.trim();
+
+      const pass2 = document.getElementById("regPass2").value.trim();
+
+      const nama = document.getElementById("regNama").value.trim();
+
+      const norek = document.getElementById("regNorek").value.trim();
+
+      const hp = document.getElementById("regHp").value.trim();
+
+
+
+      if (!user || !pass || !pass2 || !nama || !norek || !hp) {
+
+        alert("Semua kolom harus diisi!");
+
+        return;
+
+      }
+
+
+
+      if (pass !== pass2) {
+
+        alert("Password tidak cocok!");
+
+        return;
+
+      }
+
+
+
+      db.collection("members").where("username", "==", user).get()
+
+        .then(snapshot => {
+
+          if (!snapshot.empty) {
+
+            alert("Username sudah terdaftar!");
+
+
+            throw new Error("Username exists");
+
+          } else {
+
+            return db.collection("members").add({
+
+              username: user,
+
+              password: pass,
+
+              namaRek: nama,
+
+              norek: norek,
+
+              hp: hp,
+
+
+              saldo: 5000, // saldo awal
+
+              depositStatus: "PENDING",
+
+              withdrawStatus: "PENDING",
+
+              createdAt: new Date()
+
+            });
+
+          }
+
+        })
+
+        .then(() => {
+
+          alert("Pendaftaran berhasil! Silakan login.");
+
+          toggleForm();
+
+        })
+
+        .catch(err => {
+
+
+          alert("Gagal menyimpan data.");
+
+
+          console.error(err);
+
+
+          if (err.message !== "Username exists") {
+
+
+            alert("Gagal menyimpan data.");
+
+
+            console.error(err);
+
+
+          }
+
+        });
+
+    }
+
+  </script>
+
 </body>
+
 </html>
