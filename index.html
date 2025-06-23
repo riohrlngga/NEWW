@@ -68,7 +68,7 @@
     }
   </style>
 
-  <!-- Firebase SDK (compat version) -->
+  <!-- Firebase SDK (compat) -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <script>
@@ -143,8 +143,12 @@
           if (snapshot.empty) {
             alert("Login gagal. Username atau password salah.");
           } else {
-            const data = snapshot.docs[0].data();
-            sessionStorage.setItem("loggedInUser", JSON.stringify(data));
+            const doc = snapshot.docs[0];
+            const data = doc.data();
+            sessionStorage.setItem("loggedInUser", JSON.stringify({
+              id: doc.id,
+              ...data
+            }));
             alert(`Login sukses! Selamat datang, ${data.username}`);
             window.location.href = "MEMBER/dashboard.html";
           }
@@ -177,6 +181,7 @@
         .then(snapshot => {
           if (!snapshot.empty) {
             alert("Username sudah terdaftar!");
+            throw new Error("Username exists");
           } else {
             return db.collection("members").add({
               username: user,
@@ -184,6 +189,7 @@
               namaRek: nama,
               norek: norek,
               hp: hp,
+              saldo: 5000, // saldo awal
               depositStatus: "PENDING",
               withdrawStatus: "PENDING",
               createdAt: new Date()
@@ -195,8 +201,10 @@
           toggleForm();
         })
         .catch(err => {
-          alert("Gagal menyimpan data.");
-          console.error(err);
+          if (err.message !== "Username exists") {
+            alert("Gagal menyimpan data.");
+            console.error(err);
+          }
         });
     }
   </script>
