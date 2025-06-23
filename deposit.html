@@ -80,22 +80,30 @@
 
   <script>
     const user = JSON.parse(sessionStorage.getItem("loggedInUser"));
-    if (!user) {
+    if (!user || !user.id) {
       alert("Anda belum login!");
-      window.location.href = "index.html";
+      window.location.href = "../index.html";
     }
 
-    db.collection("rekening").doc("rekening").get().then(doc => {
-      if (doc.exists) {
-        const data = doc.data();
-        document.getElementById("rekeningInfo").innerHTML = `
-          <p>Bank: <b>${data.BANK}</b></p>
-          <p>Nama: <b>${data.nama}</b></p>
-          <p>No Rekening: <b>${data.norek}</b></p>
-          <p style="margin-top:12px; font-size: 13px; color:#aaa;">Silakan transfer ke rekening di atas lalu klik tombol di bawah.</p>
-        `;
-      }
-    });
+    // Ambil data rekening admin
+    db.collection("rekening").doc("rekening").get()
+      .then(doc => {
+        if (doc.exists) {
+          const data = doc.data();
+          document.getElementById("rekeningInfo").innerHTML = `
+            <p>Bank: <b>${data.BANK}</b></p>
+            <p>Nama: <b>${data.nama}</b></p>
+            <p>No Rekening: <b>${data.norek}</b></p>
+            <p style="margin-top:12px; font-size: 13px; color:#aaa;">Silakan transfer ke rekening di atas lalu klik tombol di bawah.</p>
+          `;
+        } else {
+          document.getElementById("rekeningInfo").innerHTML = `<p style="color: #f66;">❌ Data rekening belum tersedia.</p>`;
+        }
+      })
+      .catch(error => {
+        console.error("Gagal memuat rekening:", error);
+        document.getElementById("rekeningInfo").innerHTML = `<p style="color: #f66;">❌ Gagal memuat data rekening.</p>`;
+      });
 
     function kirimDeposit() {
       const nominal = parseInt(document.getElementById("nominal").value);
@@ -112,10 +120,10 @@
         createdAt: new Date()
       }).then(() => {
         alert("Permintaan deposit dikirim. Tunggu konfirmasi admin.");
-        window.location.href = "MEMBER/dashboard.html";
+        window.location.href = "../MEMBER/dashboard.html";
       }).catch(err => {
-        alert("Gagal menyimpan permintaan deposit.");
         console.error(err);
+        alert("Gagal menyimpan permintaan deposit.");
       });
     }
   </script>
