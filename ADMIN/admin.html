@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Admin Dashboard - Data Member</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: 'Arial', sans-serif;
       background: #111;
       color: #fff;
       padding: 40px;
@@ -20,7 +21,6 @@
       width: 100%;
       border-collapse: collapse;
       background: #222;
-      margin-top: 20px;
       border-radius: 10px;
       overflow: hidden;
     }
@@ -58,40 +58,50 @@
       border-radius: 6px;
       cursor: pointer;
       font-size: 12px;
-      margin-left: 5px;
+      margin: 3px;
     }
 
     .acc-button:hover {
       background: #ffe44d;
     }
+
+    .logout {
+      margin-top: 30px;
+      display: inline-block;
+      color: #aaa;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .logout:hover {
+      text-decoration: underline;
+      color: red;
+    }
   </style>
 
   <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"></script>
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyA2F9bh-M-XbBYj14j2i93qkZiAgQHyY1I",
-      authDomain: "slotkw-f05d1.firebaseapp.com",
-      projectId: "slotkw-f05d1",
-      storageBucket: "slotkw-f05d1.firebasestorage.app",
-      messagingSenderId: "2853362042",
-      appId: "1:2853362042:web:2253bf70a2bda70f56dec3",
-      measurementId: "G-230M21LKWM"
-    };
-
-    const app = firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-  </script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
 <script>
-  // Cek login admin
   if (sessionStorage.getItem("isAdmin") !== "true") {
     alert("Akses ditolak! Silakan login sebagai admin.");
     window.location.href = "login.html";
   }
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyA2F9bh-M-XbBYj14j2i93qkZiAgQHyY1I",
+    authDomain: "slotkw-f05d1.firebaseapp.com",
+    projectId: "slotkw-f05d1",
+    storageBucket: "slotkw-f05d1.appspot.com",
+    messagingSenderId: "2853362042",
+    appId: "1:2853362042:web:2253bf70a2bda70f56dec3"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
 </script>
 
 <h1>📋 Daftar Member Terdaftar</h1>
@@ -104,8 +114,8 @@
       <th>Nama Rekening</th>
       <th>No Rekening</th>
       <th>No HP</th>
-      <th>Status Deposit</th>
-      <th>Status Withdraw</th>
+      <th>Deposit</th>
+      <th>Withdraw</th>
     </tr>
   </thead>
   <tbody id="userList">
@@ -113,10 +123,68 @@
   </tbody>
 </table>
 
+<div class="logout" onclick="logout()">🚪 Logout Admin</div>
+
 <script>
   const tbody = document.getElementById("userList");
 
   function renderUsers() {
     db.collection("members").get().then(snapshot => {
       if (snapshot.empty) {
-        tbody.innerHTML = `<tr><td colspan="7" c
+        tbody.innerHTML = `<tr><td colspan="7" class="empty">Belum ada member.</td></tr>`;
+        return;
+      }
+
+      let html = "";
+      let no = 1;
+
+      snapshot.forEach(doc => {
+        const data = doc.data();
+
+        html += `
+          <tr>
+            <td>${no++}</td>
+            <td>${data.username}</td>
+            <td>${data.namaRek}</td>
+            <td>${data.norek}</td>
+            <td>${data.hp}</td>
+            <td>
+              ${data.depositStatus || "PENDING"}
+              <button class="acc-button" onclick="updateStatus('${doc.id}', 'depositStatus', 'DITERIMA')">✔</button>
+              <button class="acc-button" onclick="updateStatus('${doc.id}', 'depositStatus', 'DITOLAK')">✖</button>
+            </td>
+            <td>
+              ${data.withdrawStatus || "PENDING"}
+              <button class="acc-button" onclick="updateStatus('${doc.id}', 'withdrawStatus', 'DITERIMA')">✔</button>
+              <button class="acc-button" onclick="updateStatus('${doc.id}', 'withdrawStatus', 'DITOLAK')">✖</button>
+            </td>
+          </tr>
+        `;
+      });
+
+      tbody.innerHTML = html;
+    });
+  }
+
+  function updateStatus(userId, field, value) {
+    db.collection("members").doc(userId).update({
+      [field]: value
+    }).then(() => {
+      alert(`${field.toUpperCase()} berhasil diubah menjadi "${value}"`);
+      renderUsers();
+    }).catch(err => {
+      console.error("Gagal update status", err);
+      alert("Terjadi kesalahan saat update.");
+    });
+  }
+
+  function logout() {
+    sessionStorage.clear();
+    window.location.href = "login.html";
+  }
+
+  renderUsers();
+</script>
+
+</body>
+</html>
