@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Dashboard - Data Member</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: #fff;
+      padding: 40px;
+    }
+
+    h1 {
+      color: #f5c518;
+      margin-bottom: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #222;
+      margin-top: 20px;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    th, td {
+      padding: 12px;
+      border: 1px solid #444;
+      text-align: left;
+    }
+
+    th {
+      background: #333;
+    }
+
+    tr:nth-child(even) {
+      background: #2a2a2a;
+    }
+
+    tr:hover {
+      background: #383838;
+    }
+
+    .empty {
+      text-align: center;
+      padding: 20px;
+      color: #bbb;
+    }
+  </style>
+</head>
+<body>
+  <h1>📋 Daftar Member Terdaftar</h1>
+
+  <table>
+    <thead>
+      <tr>
+        <th>No</th>
+        <th>Username</th>
+        <th>Nama Rekening</th>
+        <th>No Rekening</th>
+        <th>No HP</th>
+      </tr>
+    </thead>
+    <tbody id="userList"></tbody>
+  </table>
+
+  <script>
+    const users = JSON.parse(localStorage.getItem("users")) || [];
+    const tbody = document.getElementById("userList");
+
+    if (users.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5" class="empty">Belum ada data member.</td></tr>`;
+    } else {
+      users.forEach((u, i) => {
+        const row = `<tr>
+          <td>${i + 1}</td>
+          <td>${u.username}</td>
+          <td>${u.namaRek}</td>
+          <td>${u.norek}</td>
+          <td>${u.hp}</td>
+        </tr>`;
+        tbody.innerHTML += row;
+      });
+    }
+  </script>
+</body>
+</html>
