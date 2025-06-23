@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login Member - Slot KW</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap');
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Orbitron', sans-serif;
+      background: linear-gradient(135deg, #111, #1c1c1c);
+      color: #fff;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    .container {
+      width: 100%;
+      max-width: 400px;
+      background: #222;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 0 15px #f5c51855;
+    }
+    h1 {
+      text-align: center;
+      color: #f5c518;
+      margin-bottom: 20px;
+    }
+    input {
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      border: none;
+      border-radius: 8px;
+      background: #333;
+      color: #fff;
+      font-size: 16px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      background-color: #f5c518;
+      color: #111;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    button:hover {
+      background-color: #ffe44d;
+    }
+    .toggle {
+      text-align: center;
+      margin-top: 15px;
+      cursor: pointer;
+      color: #aaa;
+    }
+    .toggle:hover {
+      text-decoration: underline;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 id="formTitle">Login Member</h1>
+
+    <div id="loginForm">
+      <input type="text" placeholder="Username" id="loginUser" />
+      <input type="password" placeholder="Password" id="loginPass" />
+      <button onclick="login()">Login</button>
+      <div class="toggle" onclick="toggleForm()">Belum punya akun? Daftar</div>
+    </div>
+
+    <div id="registerForm" style="display:none;">
+      <input type="text" placeholder="Username Baru" id="regUser" />
+      <input type="password" placeholder="Password" id="regPass" />
+      <input type="password" placeholder="Ulangi Password" id="regPass2" />
+      <button onclick="register()">Daftar</button>
+      <div class="toggle" onclick="toggleForm()">Sudah punya akun? Login</div>
+    </div>
+  </div>
+
+  <script>
+    function toggleForm() {
+      const login = document.getElementById("loginForm");
+      const reg = document.getElementById("registerForm");
+      const title = document.getElementById("formTitle");
+
+      if (login.style.display === "none") {
+        login.style.display = "block";
+        reg.style.display = "none";
+        title.textContent = "Login Member";
+      } else {
+        login.style.display = "none";
+        reg.style.display = "block";
+        title.textContent = "Daftar Member";
+      }
+    }
+
+    function login() {
+      const user = document.getElementById("loginUser").value;
+      const pass = document.getElementById("loginPass").value;
+
+      if (!user || !pass) {
+        alert("Harap isi semua kolom!");
+        return;
+      }
+
+      // Simulasi login, tanpa backend
+      // Kalau kamu punya sistem backend, proses di sini
+      alert(`Login berhasil: ${user}`);
+      window.location.href = "dashboard.html"; // setelah login, pindah ke dashboard
+    }
+
+    function register() {
+      const user = document.getElementById("regUser").value;
+      const pass = document.getElementById("regPass").value;
+      const pass2 = document.getElementById("regPass2").value;
+
+      if (!user || !pass || !pass2) {
+        alert("Semua kolom harus diisi!");
+        return;
+      }
+
+      if (pass !== pass2) {
+        alert("Password tidak cocok!");
+        return;
+      }
+
+      // Simulasi daftar
+      alert(`Akun berhasil dibuat: ${user}`);
+      toggleForm();
+    }
+  </script>
+</body>
+</html>
