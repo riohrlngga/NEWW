@@ -61,6 +61,24 @@
       color: red;
     }
   </style>
+
+  <!-- Firebase SDK (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyA2F9bh-M-XbBYj14j2i93qkZiAgQHyY1I",
+      authDomain: "slotkw-f05d1.firebaseapp.com",
+      projectId: "slotkw-f05d1",
+      storageBucket: "slotkw-f05d1.firebasestorage.app",
+      messagingSenderId: "2853362042",
+      appId: "1:2853362042:web:2253bf70a2bda70f56dec3",
+      measurementId: "G-230M21LKWM"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+  </script>
 </head>
 <body>
   <h1>🎮 Member Area</h1>
@@ -69,30 +87,39 @@
   <p>Pilih game yang ingin kamu mainkan:</p>
 
   <a class="game-button" href="/NEWW/GAME/index.html">🎰 Slot 3 Kolom</a>
-<a class="game-button" href="/NEWW/GAME/GAME1.html">🎰 Slot 5 Kolom</a>
-
+  <a class="game-button" href="/NEWW/GAME/GAME1.html">🎰 Slot 5 Kolom</a>
 
   <div class="logout" onclick="logout()">🚪 Logout</div>
 
   <script>
     const user = JSON.parse(sessionStorage.getItem("loggedInUser"));
-    
-    if (!user) {
+
+    if (!user || !user.id) {
       alert("Anda belum login!");
-      window.location.href = "../index.html"; // ✅ Arahkan kembali ke login
+      window.location.href = "../index.html";
     } else {
-      document.getElementById("userInfo").innerHTML = `
-        👤 Username: <b>${user.username}</b><br>
-        💳 Nama Rekening: ${user.namaRek}<br>
-        🔢 No Rekening: ${user.norek}<br>
-        📱 No HP: ${user.hp}
-      `;
+      db.collection("members").doc(user.id).get().then(doc => {
+        if (doc.exists) {
+          const data = doc.data();
+          document.getElementById("userInfo").innerHTML = `
+            👤 Username: <b>${data.username}</b><br>
+            💳 Nama Rekening: ${data.namaRek}<br>
+            🔢 No Rekening: ${data.norek}<br>
+            📱 No HP: ${data.hp}<br>
+            💰 Saldo: <b>Rp ${data.saldo.toLocaleString()}</b>
+          `;
+
+          // Simpan saldo ke sessionStorage (biar bisa dipakai di game)
+          sessionStorage.setItem("saldo", data.saldo);
+        }
+      });
     }
 
     function logout() {
       sessionStorage.removeItem("loggedInUser");
+      sessionStorage.removeItem("saldo");
       alert("Logout berhasil!");
-      window.location.href = "../index.html"; // ✅ Kembali ke login setelah logout
+      window.location.href = "../index.html";
     }
   </script>
 </body>
