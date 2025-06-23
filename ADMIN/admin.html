@@ -12,7 +12,7 @@
       padding: 40px;
     }
 
-    h1 {
+    h1, h2 {
       color: #f5c518;
       margin-bottom: 20px;
     }
@@ -49,7 +49,7 @@
       color: #bbb;
     }
 
-    .acc-button {
+    .acc-button, .btn {
       padding: 6px 12px;
       background: #f5c518;
       color: #111;
@@ -61,7 +61,7 @@
       margin: 3px;
     }
 
-    .acc-button:hover {
+    .acc-button:hover, .btn:hover {
       background: #ffe44d;
     }
 
@@ -76,6 +76,17 @@
     .logout:hover {
       text-decoration: underline;
       color: red;
+    }
+
+    .section {
+      margin-top: 40px;
+    }
+
+    input[type="text"], input[type="number"] {
+      padding: 6px;
+      border-radius: 5px;
+      border: none;
+      margin: 6px;
     }
   </style>
 
@@ -105,7 +116,7 @@
 </script>
 
 <h1>📋 Daftar Member Terdaftar</h1>
-
+<input type="text" id="searchUser" placeholder="Cari username..." oninput="renderUsers()">
 <table>
   <thead>
     <tr>
@@ -114,24 +125,53 @@
       <th>Nama Rekening</th>
       <th>No Rekening</th>
       <th>No HP</th>
+      <th>Saldo</th>
       <th>Deposit</th>
       <th>Withdraw</th>
+      <th>Isi Saldo</th>
     </tr>
   </thead>
   <tbody id="userList">
-    <tr><td colspan="7" class="empty">Memuat data...</td></tr>
+    <tr><td colspan="9" class="empty">Memuat data...</td></tr>
   </tbody>
 </table>
+
+<div class="section">
+  <h2>🔧 Ubah Rekening Admin</h2>
+  <input type="text" id="bank" placeholder="Bank">
+  <input type="text" id="nama" placeholder="Nama">
+  <input type="text" id="norek" placeholder="No Rekening">
+  <button class="btn" onclick="updateRekening()">Simpan</button>
+</div>
+
+<div class="section">
+  <h2>💰 Form Pengajuan Deposit</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Username</th>
+        <th>Nominal</th>
+        <th>Status</th>
+        <th>Aksi</th>
+      </tr>
+    </thead>
+    <tbody id="depositList">
+      <tr><td colspan="4" class="empty">Memuat data deposit...</td></tr>
+    </tbody>
+  </table>
+</div>
 
 <div class="logout" onclick="logout()">🚪 Logout Admin</div>
 
 <script>
   const tbody = document.getElementById("userList");
+  const depositList = document.getElementById("depositList");
 
   function renderUsers() {
+    const keyword = document.getElementById("searchUser").value.toLowerCase();
     db.collection("members").get().then(snapshot => {
       if (snapshot.empty) {
-        tbody.innerHTML = `<tr><td colspan="7" class="empty">Belum ada member.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="9" class="empty">Belum ada member.</td></tr>`;
         return;
       }
 
@@ -140,6 +180,7 @@
 
       snapshot.forEach(doc => {
         const data = doc.data();
+        if (!data.username.toLowerCase().includes(keyword)) return;
 
         html += `
           <tr>
@@ -148,16 +189,10 @@
             <td>${data.namaRek}</td>
             <td>${data.norek}</td>
             <td>${data.hp}</td>
-            <td>
-              ${data.depositStatus || "PENDING"}
-              <button class="acc-button" onclick="updateStatus('${doc.id}', 'depositStatus', 'DITERIMA')">✔</button>
-              <button class="acc-button" onclick="updateStatus('${doc.id}', 'depositStatus', 'DITOLAK')">✖</button>
-            </td>
-            <td>
-              ${data.withdrawStatus || "PENDING"}
-              <button class="acc-button" onclick="updateStatus('${doc.id}', 'withdrawStatus', 'DITERIMA')">✔</button>
-              <button class="acc-button" onclick="updateStatus('${doc.id}', 'withdrawStatus', 'DITOLAK')">✖</button>
-            </td>
+            <td>Rp ${data.saldo?.toLocaleString() || 0}</td>
+            <td>${data.depositStatus || "PENDING"}</td>
+            <td>${data.withdrawStatus || "PENDING"}</td>
+            <td><input type='number' placeholder='Nominal' onchange='isiSaldo("${doc.id}", this.value)'/></td>
           </tr>
         `;
       });
@@ -166,15 +201,56 @@
     });
   }
 
-  function updateStatus(userId, field, value) {
-    db.collection("members").doc(userId).update({
-      [field]: value
-    }).then(() => {
-      alert(`${field.toUpperCase()} berhasil diubah menjadi "${value}"`);
-      renderUsers();
-    }).catch(err => {
-      console.error("Gagal update status", err);
-      alert("Terjadi kesalahan saat update.");
+  function updateStatusDeposit(docId, value) {
+    db.collection("deposits").doc(docId).update({ status: value }).then(renderDeposits);
+  }
+
+  function renderDeposits() {
+    db.collection("deposits").orderBy("createdAt", "desc").get().then(snapshot => {
+      if (snapshot.empty) {
+        depositList.innerHTML = `<tr><td colspan="4" class="empty">Tidak ada pengajuan.</td></tr>`;
+        return;
+      }
+
+      let html = "";
+      snapshot.forEach(doc => {
+        const d = doc.data();
+        html += `
+          <tr>
+            <td>${d.username}</td>
+            <td>Rp ${d.nominal?.toLocaleString()}</td>
+            <td>${d.status}</td>
+            <td>
+              <button class="acc-button" onclick="updateStatusDeposit('${doc.id}', 'DITERIMA')">✔</button>
+              <button class="acc-button" onclick="updateStatusDeposit('${doc.id}', 'DITOLAK')">✖</button>
+            </td>
+          </tr>
+        `;
+      });
+
+      depositList.innerHTML = html;
+    });
+  }
+
+  function updateRekening() {
+    const bank = document.getElementById("bank").value;
+    const nama = document.getElementById("nama").value;
+    const norek = document.getElementById("norek").value;
+
+    db.collection("rekening").doc("rekening").set({ BANK: bank, nama, norek })
+      .then(() => alert("Rekening berhasil diperbarui."))
+      .catch(err => alert("Gagal update rekening."));
+  }
+
+  function isiSaldo(userId, amount) {
+    const nominal = parseInt(amount);
+    if (isNaN(nominal) || nominal < 1000) return;
+    const memberRef = db.collection("members").doc(userId);
+    memberRef.get().then(doc => {
+      if (!doc.exists) return;
+      const data = doc.data();
+      const newSaldo = (data.saldo || 0) + nominal;
+      memberRef.update({ saldo: newSaldo }).then(renderUsers);
     });
   }
 
@@ -184,6 +260,7 @@
   }
 
   renderUsers();
+  renderDeposits();
 </script>
 
 </body>
