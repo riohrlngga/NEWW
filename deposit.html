@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -16,6 +16,7 @@
       min-height: 100vh;
       padding: 20px;
     }
+
     .card {
       background: #222;
       padding: 25px;
@@ -24,13 +25,16 @@
       max-width: 400px;
       width: 100%;
     }
+
     .card h2 {
       color: #f5c518;
       margin-bottom: 15px;
     }
+
     .card p {
       margin: 5px 0;
     }
+
     input, button {
       width: 100%;
       padding: 10px;
@@ -38,16 +42,19 @@
       border: none;
       border-radius: 6px;
     }
+
     input {
       background: #333;
       color: #fff;
     }
+
     button {
       background: #f5c518;
       color: #111;
       font-weight: bold;
       cursor: pointer;
     }
+
     button:hover {
       background: #ffe44d;
     }
@@ -70,12 +77,13 @@
   </script>
 </head>
 <body>
+
   <div class="card">
     <h2>Form Deposit</h2>
     <div id="rekeningInfo">Memuat rekening admin...</div>
 
     <input type="number" id="nominal" placeholder="Nominal Deposit (Rp)">
-    <button onclick="kirimDeposit()">Kirim Bukti Deposit</button>
+    <button id="submitBtn" onclick="kirimDeposit()">Kirim Bukti Deposit</button>
   </div>
 
   <script>
@@ -85,47 +93,64 @@
       window.location.href = "../index.html";
     }
 
+    let rekeningData = {};
+
     // Ambil data rekening admin
-    db.collection("rekening").doc("rekening").get()
-      .then(doc => {
-        if (doc.exists) {
-          const data = doc.data();
-          document.getElementById("rekeningInfo").innerHTML = `
-            <p>Bank: <b>${data.BANK}</b></p>
-            <p>Nama: <b>${data.nama}</b></p>
-            <p>No Rekening: <b>${data.norek}</b></p>
-            <p style="margin-top:12px; font-size: 13px; color:#aaa;">Silakan transfer ke rekening di atas lalu klik tombol di bawah.</p>
-          `;
-        } else {
-          document.getElementById("rekeningInfo").innerHTML = `<p style="color: #f66;">❌ Data rekening belum tersedia.</p>`;
-        }
-      })
-      .catch(error => {
-        console.error("Gagal memuat rekening:", error);
-        document.getElementById("rekeningInfo").innerHTML = `<p style="color: #f66;">❌ Gagal memuat data rekening.</p>`;
-      });
+    db.collection("rekening").doc("rekening").get().then(doc => {
+      if (doc.exists) {
+        rekeningData = doc.data();
+        document.getElementById("rekeningInfo").innerHTML = `
+          <p>Bank: <b>${rekeningData.BANK}</b></p>
+          <p>Nama: <b>${rekeningData.nama}</b></p>
+          <p>No Rekening: <b>${rekeningData.norek}</b></p>
+          <p style="margin-top:12px; font-size: 13px; color:#aaa;">
+            Silakan transfer ke rekening di atas lalu klik tombol di bawah.
+          </p>
+        `;
+      } else {
+        document.getElementById("rekeningInfo").innerHTML = `<p style="color: #f66;">❌ Data rekening belum tersedia.</p>`;
+      }
+    }).catch(error => {
+      console.error("Gagal memuat rekening:", error);
+      document.getElementById("rekeningInfo").innerHTML = `<p style="color: #f66;">❌ Gagal memuat data rekening.</p>`;
+    });
+
+    let sedangMengirim = false;
 
     function kirimDeposit() {
+      if (sedangMengirim) return;
+
       const nominal = parseInt(document.getElementById("nominal").value);
+      const tombol = document.getElementById("submitBtn");
+
       if (!nominal || nominal < 1000) {
-        alert("Masukkan nominal yang valid.");
+        alert("Masukkan nominal yang valid (minimal Rp 1.000).");
         return;
       }
+
+      sedangMengirim = true;
+      tombol.disabled = true;
+      tombol.textContent = "Mengirim...";
 
       db.collection("deposits").add({
         userId: user.id,
         username: user.username,
         nominal,
         status: "PENDING",
+        bankTujuan: rekeningData.BANK || "UNKNOWN",
         createdAt: new Date()
       }).then(() => {
-        alert("Permintaan deposit dikirim. Tunggu konfirmasi admin.");
+        alert("Permintaan deposit berhasil dikirim.");
         window.location.href = "../MEMBER/dashboard.html";
       }).catch(err => {
-        console.error(err);
-        alert("Gagal menyimpan permintaan deposit.");
+        console.error("Gagal menyimpan deposit:", err);
+        alert("Terjadi kesalahan saat menyimpan. Silakan coba lagi.");
+        sedangMengirim = false;
+        tombol.disabled = false;
+        tombol.textContent = "Kirim Bukti Deposit";
       });
     }
   </script>
+
 </body>
 </html>
