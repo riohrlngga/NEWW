@@ -6,9 +6,7 @@
   <title>Login Member - Slot KW</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap');
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
     body {
       font-family: 'Orbitron', sans-serif;
       background: linear-gradient(135deg, #111, #1c1c1c);
@@ -68,4 +66,139 @@
       text-decoration: underline;
       color: #fff;
     }
-  </sty
+  </style>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyA2F9bh-M-XbBYj14j2i93qkZiAgQHyY1I",
+      authDomain: "slotkw-f05d1.firebaseapp.com",
+      projectId: "slotkw-f05d1",
+      storageBucket: "slotkw-f05d1.firebasestorage.app",
+      messagingSenderId: "2853362042",
+      appId: "1:2853362042:web:2253bf70a2bda70f56dec3",
+      measurementId: "G-230M21LKWM"
+    };
+
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+  </script>
+</head>
+<body>
+  <div class="container">
+    <h1 id="formTitle">Login Member</h1>
+
+    <div id="loginForm">
+      <input type="text" placeholder="Username" id="loginUser" />
+      <input type="password" placeholder="Password" id="loginPass" />
+      <button onclick="login()">Login</button>
+      <div class="toggle" onclick="toggleForm()">Belum punya akun? Daftar</div>
+    </div>
+
+    <div id="registerForm" style="display:none;">
+      <input type="text" placeholder="Username Baru" id="regUser" />
+      <input type="password" placeholder="Password" id="regPass" />
+      <input type="password" placeholder="Ulangi Password" id="regPass2" />
+      <input type="text" placeholder="Nama Rekening" id="regNama" />
+      <input type="text" placeholder="Nomor Rekening" id="regNorek" />
+      <input type="text" placeholder="Nomor HP" id="regHp" />
+      <button onclick="register()">Daftar</button>
+      <div class="toggle" onclick="toggleForm()">Sudah punya akun? Login</div>
+    </div>
+  </div>
+
+  <script>
+    function toggleForm() {
+      const login = document.getElementById("loginForm");
+      const reg = document.getElementById("registerForm");
+      const title = document.getElementById("formTitle");
+
+      if (login.style.display === "none") {
+        login.style.display = "block";
+        reg.style.display = "none";
+        title.textContent = "Login Member";
+      } else {
+        login.style.display = "none";
+        reg.style.display = "block";
+        title.textContent = "Daftar Member";
+      }
+    }
+
+    function login() {
+      const user = document.getElementById("loginUser").value.trim();
+      const pass = document.getElementById("loginPass").value.trim();
+
+      if (!user || !pass) {
+        alert("Harap isi semua kolom!");
+        return;
+      }
+
+      db.collection("members")
+        .where("username", "==", user)
+        .where("password", "==", pass)
+        .get()
+        .then(snapshot => {
+          if (snapshot.empty) {
+            alert("Login gagal. Username atau password salah.");
+          } else {
+            const data = snapshot.docs[0].data();
+            sessionStorage.setItem("loggedInUser", JSON.stringify(data));
+            alert(`Login sukses! Selamat datang, ${data.username}`);
+            window.location.href = "dashboard.html";
+          }
+        })
+        .catch(error => {
+          alert("Terjadi kesalahan saat login.");
+          console.error(error);
+        });
+    }
+
+    function register() {
+      const user = document.getElementById("regUser").value.trim();
+      const pass = document.getElementById("regPass").value.trim();
+      const pass2 = document.getElementById("regPass2").value.trim();
+      const nama = document.getElementById("regNama").value.trim();
+      const norek = document.getElementById("regNorek").value.trim();
+      const hp = document.getElementById("regHp").value.trim();
+
+      if (!user || !pass || !pass2 || !nama || !norek || !hp) {
+        alert("Semua kolom harus diisi!");
+        return;
+      }
+
+      if (pass !== pass2) {
+        alert("Password tidak cocok!");
+        return;
+      }
+
+      db.collection("members").where("username", "==", user).get()
+        .then(snapshot => {
+          if (!snapshot.empty) {
+            alert("Username sudah terdaftar!");
+          } else {
+            return db.collection("members").add({
+              username: user,
+              password: pass,
+              namaRek: nama,
+              norek: norek,
+              hp: hp,
+              depositStatus: "PENDING",
+              withdrawStatus: "PENDING",
+              createdAt: new Date()
+            });
+          }
+        })
+        .then(() => {
+          alert("Pendaftaran berhasil! Silakan login.");
+          toggleForm();
+        })
+        .catch(err => {
+          alert("Gagal menyimpan data.");
+          console.error(err);
+        });
+    }
+  </script>
+</body>
+</html>
