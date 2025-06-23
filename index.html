@@ -146,7 +146,7 @@
             const data = snapshot.docs[0].data();
             sessionStorage.setItem("loggedInUser", JSON.stringify(data));
             alert(`Login sukses! Selamat datang, ${data.username}`);
-            window.location.href = "dashboard.html";
+            window.location.href = "MEMBER/dashboard.html";
           }
         })
         .catch(error => {
