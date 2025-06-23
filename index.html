@@ -76,12 +76,10 @@
       apiKey: "AIzaSyA2F9bh-M-XbBYj14j2i93qkZiAgQHyY1I",
       authDomain: "slotkw-f05d1.firebaseapp.com",
       projectId: "slotkw-f05d1",
-      storageBucket: "slotkw-f05d1.firebasestorage.app",
+      storageBucket: "slotkw-f05d1.appspot.com",
       messagingSenderId: "2853362042",
-      appId: "1:2853362042:web:2253bf70a2bda70f56dec3",
-      measurementId: "G-230M21LKWM"
+      appId: "1:2853362042:web:2253bf70a2bda70f56dec3"
     };
-
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
   </script>
@@ -89,14 +87,12 @@
 <body>
   <div class="container">
     <h1 id="formTitle">Login Member</h1>
-
     <div id="loginForm">
       <input type="text" placeholder="Username" id="loginUser" />
       <input type="password" placeholder="Password" id="loginPass" />
       <button onclick="login()">Login</button>
       <div class="toggle" onclick="toggleForm()">Belum punya akun? Daftar</div>
     </div>
-
     <div id="registerForm" style="display:none;">
       <input type="text" placeholder="Username Baru" id="regUser" />
       <input type="password" placeholder="Password" id="regPass" />
@@ -129,11 +125,7 @@
     function login() {
       const user = document.getElementById("loginUser").value.trim();
       const pass = document.getElementById("loginPass").value.trim();
-
-      if (!user || !pass) {
-        alert("Harap isi semua kolom!");
-        return;
-      }
+      if (!user || !pass) return alert("Harap isi semua kolom!");
 
       db.collection("members")
         .where("username", "==", user)
@@ -145,10 +137,7 @@
           } else {
             const doc = snapshot.docs[0];
             const data = doc.data();
-            sessionStorage.setItem("loggedInUser", JSON.stringify({
-              id: doc.id,
-              ...data
-            }));
+            sessionStorage.setItem("loggedInUser", JSON.stringify({ id: doc.id, ...data }));
             alert(`Login sukses! Selamat datang, ${data.username}`);
             window.location.href = "MEMBER/dashboard.html";
           }
@@ -167,41 +156,34 @@
       const norek = document.getElementById("regNorek").value.trim();
       const hp = document.getElementById("regHp").value.trim();
 
-      if (!user || !pass || !pass2 || !nama || !norek || !hp) {
-        alert("Semua kolom harus diisi!");
-        return;
-      }
-
-      if (pass !== pass2) {
-        alert("Password tidak cocok!");
-        return;
-      }
+      if (!user || !pass || !pass2 || !nama || !norek || !hp) return alert("Semua kolom harus diisi!");
+      if (pass !== pass2) return alert("Password tidak cocok!");
 
       db.collection("members").where("username", "==", user).get()
         .then(snapshot => {
-          if (!snapshot.empty) {
-            alert("Username sudah terdaftar!");
-            throw new Error("Username exists");
-          } else {
-            return db.collection("members").add({
-              username: user,
-              password: pass,
-              namaRek: nama,
-              norek: norek,
-              hp: hp,
-              saldo: 5000, // saldo awal
-              depositStatus: "PENDING",
-              withdrawStatus: "PENDING",
-              createdAt: new Date()
-            });
-          }
+          if (!snapshot.empty) throw new Error("Username exists");
+          return db.collection("members").add({
+            username: user,
+            password: pass,
+            namaRek: nama,
+            norek: norek,
+            hp: hp,
+            saldo: 5000,
+            depositStatus: "PENDING",
+            withdrawStatus: "PENDING",
+            turnover: 0,
+            currentGame: "-",
+            createdAt: new Date()
+          });
         })
         .then(() => {
           alert("Pendaftaran berhasil! Silakan login.");
           toggleForm();
         })
         .catch(err => {
-          if (err.message !== "Username exists") {
+          if (err.message === "Username exists") {
+            alert("Username sudah terdaftar!");
+          } else {
             alert("Gagal menyimpan data.");
             console.error(err);
           }
