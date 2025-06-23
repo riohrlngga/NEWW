@@ -92,7 +92,7 @@
 
     <p id="result">Klik SPIN untuk bermain</p>
 
-    <p>💰 Saldo: <span id="saldo">3000</span></p>
+    <p>💰 Saldo: <span id="saldo">-</span></p>
     <p>🎯 Taruhan: <span id="taruhan">250</span></p>
 
     <div style="margin: 10px 0;">
@@ -112,13 +112,16 @@
   </div>
 
   <script>
-    let saldo = 3000;
-    let bet = 250;
     const symbols = ["🍒", "🍋", "🍊", "💎", "🔔", "🍇", "🥝", "🥥", "🍉", "🍍", "🥭", "🍓"];
-
     let autoCount = 0;
     let autoDelay = 1200;
     let autoRunning = false;
+    let bet = 250;
+
+    // Ambil saldo dari sessionStorage
+    let saldo = Number(sessionStorage.getItem("saldo")) || 0;
+    document.getElementById("saldo").textContent = saldo;
+    document.getElementById("taruhan").textContent = bet;
 
     function spin(auto = false) {
       if (saldo < bet) {
@@ -152,25 +155,16 @@
         if (isJackpot) {
           hadiah = bet * 8;
           result = `⚡ MAXWIN 💎 +${hadiah}`;
-          animateSaldo(saldo, saldo + hadiah, () => {
-            if (autoRunning) {
-              autoCount--;
-              setTimeout(jalankanAutoSpin, autoDelay);
-            }
-          });
-          return;
-        }
-
-        if (r1 === "🔔" && r2 === "🔔" && r3 === "🔔") {
+        } else if (r1 === "🔔" && r2 === "🔔" && r3 === "🔔") {
           hadiah = bet * 5;
-          saldo += hadiah;
           result = `✨ JACKPOT SEDERHANA 🔔 +${hadiah}`;
         } else if (r1 === r2 || r2 === r3 || r1 === r3) {
           hadiah = bet * 2;
-          saldo += hadiah;
           result = `👍 Menang Kecil +${hadiah}`;
         }
 
+        saldo += hadiah;
+        sessionStorage.setItem("saldo", saldo);
         document.getElementById("saldo").textContent = saldo;
         document.getElementById("result").textContent = result;
 
@@ -179,21 +173,6 @@
           setTimeout(jalankanAutoSpin, autoDelay);
         }
       }, 900);
-    }
-
-    function animateSaldo(start, end, callback) {
-      let current = start;
-      const step = Math.ceil((end - start) / 50);
-      const interval = setInterval(() => {
-        current += step;
-        if (current >= end) {
-          current = end;
-          clearInterval(interval);
-          if (callback) callback();
-        }
-        saldo = current;
-        document.getElementById("saldo").textContent = saldo;
-      }, 20);
     }
 
     function ubahTaruhan(nilai) {
