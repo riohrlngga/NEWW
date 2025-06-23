@@ -99,7 +99,6 @@
     }
   </style>
 
-  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <script>
@@ -125,6 +124,7 @@
   <div class="actions">
     <a class="btn" href="/NEWW/GAME/index.html">🎰 Slot 3 Kolom</a>
     <a class="btn" href="/NEWW/GAME/GAME1.html">🎰 Slot 5 Kolom</a>
+    <a class="btn" href="/NEWW/GAME/Ikan.html">🎯 Tembak Ikan</a>
     <a class="btn" href="/NEWW/deposit.html">💰 Deposit</a>
     <a class="btn" href="/NEWW/withdraw.html">💸 Withdraw</a>
   </div>
@@ -138,7 +138,6 @@
       alert("Anda belum login!");
       window.location.href = "../index.html";
     } else {
-      // ✅ Gunakan real-time listener untuk update saldo otomatis
       db.collection("members").doc(user.id).onSnapshot(doc => {
         if (doc.exists) {
           const data = doc.data();
