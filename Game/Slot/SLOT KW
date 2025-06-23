@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Slot Game KW</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap');
+
+    body {
+      font-family: 'Orbitron', sans-serif;
+      text-align: center;
+      background: linear-gradient(145deg, #0d0d0d, #1c1c1c);
+      color: #fff;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: auto;
+      padding: 40px 20px;
+    }
+
+    h1 {
+      font-size: 32px;
+      color: #f5c518;
+      margin-bottom: 30px;
+      text-shadow: 0 0 10px #f5c518;
+    }
+
+    #slot {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    #slot span {
+      font-size: 60px;
+      margin: 0 15px;
+      padding: 15px;
+      width: 70px;
+      height: 70px;
+      line-height: 70px;
+      background: #222;
+      border: 2px solid #f5c518;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #f5c51855;
+    }
+
+    p {
+      font-size: 18px;
+      margin: 10px 0;
+    }
+
+    button {
+      padding: 12px 25px;
+      font-size: 18px;
+      margin: 5px;
+      border: none;
+      border-radius: 8px;
+      background-color: #f5c518;
+      color: #111;
+      cursor: pointer;
+      transition: 0.2s;
+      font-weight: bold;
+      box-shadow: 0 3px 6px #000;
+    }
+
+    button:hover {
+      background-color: #ffe44d;
+      transform: scale(1.05);
+    }
+
+    #result {
+      font-size: 20px;
+      font-weight: bold;
+      margin-top: 20px;
+      color: #f5f5f5;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎰 Slot Game KW</h1>
+
+    <div id="slot">
+      <span id="s1">❓</span>
+      <span id="s2">❓</span>
+      <span id="s3">❓</span>
+    </div>
+
+    <p id="result">Klik SPIN untuk bermain</p>
+
+    <p>💰 Saldo: <span id="saldo">3000</span></p>
+    <p>🎯 Taruhan: <span id="taruhan">250</span></p>
+
+    <div style="margin: 10px 0;">
+      <button onclick="ubahTaruhan(-50)">-</button>
+      <button onclick="ubahTaruhan(50)">+</button>
+    </div>
+
+    <button onclick="spin()">SPIN</button>
+
+    <div style="margin-top: 20px;">
+      <p>🔁 Auto Spin:</p>
+      <button onclick="autoSpin(10)">Auto 10</button>
+      <button onclick="autoSpin(30)">Auto 30</button>
+      <button onclick="autoSpin(50)">Auto 50</button>
+      <button onclick="autoSpin(100)">Auto 100</button>
+    </div>
+  </div>
+
+  <script>
+    let saldo = 3000;
+    let bet = 250;
+    const symbols = ["🍒", "🍋", "🍊", "💎", "🔔", "🍇", "🥝", "🥥", "🍉", "🍍", "🥭", "🍓"];
+
+    let autoCount = 0;
+    let autoDelay = 1200;
+    let autoRunning = false;
+
+    function spin(auto = false) {
+      if (saldo < bet) {
+        alert("Saldo tidak cukup!");
+        autoRunning = false;
+        return;
+      }
+
+      saldo -= bet;
+
+      const r1 = symbols[Math.floor(Math.random() * symbols.length)];
+      const r2 = symbols[Math.floor(Math.random() * symbols.length)];
+      const r3 = symbols[Math.floor(Math.random() * symbols.length)];
+
+      document.getElementById("s1").textContent = "⏳";
+      document.getElementById("s2").textContent = "⏳";
+      document.getElementById("s3").textContent = "⏳";
+      document.getElementById("result").textContent = "Memutar...";
+
+      setTimeout(() => document.getElementById("s1").textContent = r1, 300);
+      setTimeout(() => document.getElementById("s2").textContent = r2, 600);
+
+      setTimeout(() => {
+        document.getElementById("s3").textContent = r3;
+
+        let hadiah = 0;
+        let result = "Zonk 😢";
+
+        const isJackpot = (r1 === "💎" && r2 === "💎" && r3 === "💎");
+
+        if (isJackpot) {
+          hadiah = bet * 8;
+          result = `⚡ MAXWIN 💎 +${hadiah}`;
+          animateSaldo(saldo, saldo + hadiah, () => {
+            if (autoRunning) {
+              autoCount--;
+              setTimeout(jalankanAutoSpin, autoDelay);
+            }
+          });
+          return;
+        }
+
+        if (r1 === "🔔" && r2 === "🔔" && r3 === "🔔") {
+          hadiah = bet * 5;
+          saldo += hadiah;
+          result = `✨ JACKPOT SEDERHANA 🔔 +${hadiah}`;
+        } else if (r1 === r2 || r2 === r3 || r1 === r3) {
+          hadiah = bet * 2;
+          saldo += hadiah;
+          result = `👍 Menang Kecil +${hadiah}`;
+        }
+
+        document.getElementById("saldo").textContent = saldo;
+        document.getElementById("result").textContent = result;
+
+        if (autoRunning) {
+          autoCount--;
+          setTimeout(jalankanAutoSpin, autoDelay);
+        }
+      }, 900);
+    }
+
+    function animateSaldo(start, end, callback) {
+      let current = start;
+      const step = Math.ceil((end - start) / 50);
+      const interval = setInterval(() => {
+        current += step;
+        if (current >= end) {
+          current = end;
+          clearInterval(interval);
+          if (callback) callback();
+        }
+        saldo = current;
+        document.getElementById("saldo").textContent = saldo;
+      }, 20);
+    }
+
+    function ubahTaruhan(nilai) {
+      bet += nilai;
+      if (bet < 100) bet = 100;
+      if (bet > 10000) bet = 10000;
+      document.getElementById("taruhan").textContent = bet;
+    }
+
+    function autoSpin(jumlah) {
+      if (autoRunning) return;
+      autoCount = jumlah;
+      autoRunning = true;
+      jalankanAutoSpin();
+    }
+
+    function jalankanAutoSpin() {
+      if (autoCount <= 0) {
+        autoRunning = false;
+        return;
+      }
+      spin(true);
+    }
+  </script>
+</body>
+</html>
