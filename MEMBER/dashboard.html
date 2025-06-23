@@ -6,7 +6,7 @@
   <title>Dashboard Member</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap');
-    
+
     body {
       font-family: 'Orbitron', sans-serif;
       background: linear-gradient(145deg, #0d0d0d, #1c1c1c);
@@ -111,7 +111,6 @@
       messagingSenderId: "2853362042",
       appId: "1:2853362042:web:2253bf70a2bda70f56dec3"
     };
-
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
   </script>
@@ -139,7 +138,8 @@
       alert("Anda belum login!");
       window.location.href = "../index.html";
     } else {
-      db.collection("members").doc(user.id).get().then(doc => {
+      // ✅ Gunakan real-time listener untuk update saldo otomatis
+      db.collection("members").doc(user.id).onSnapshot(doc => {
         if (doc.exists) {
           const data = doc.data();
           document.getElementById("userInfo").innerHTML = `
@@ -154,6 +154,9 @@
           alert("Data member tidak ditemukan.");
           window.location.href = "../index.html";
         }
+      }, err => {
+        console.error("Gagal memuat data member:", err);
+        alert("Gagal mengambil data. Silakan coba lagi.");
       });
     }
 
