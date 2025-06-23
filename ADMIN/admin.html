@@ -48,9 +48,33 @@
       padding: 20px;
       color: #bbb;
     }
+
+    .acc-button {
+      padding: 6px 12px;
+      background: #f5c518;
+      color: #111;
+      font-weight: bold;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      margin-left: 5px;
+    }
+
+    .acc-button:hover {
+      background: #ffe44d;
+    }
   </style>
 </head>
 <body>
+  <script>
+    // Cek login admin
+    if (sessionStorage.getItem("isAdmin") !== "true") {
+      alert("Akses ditolak! Silakan login sebagai admin.");
+      window.location.href = "login.html";
+    }
+  </script>
+
   <h1>📋 Daftar Member Terdaftar</h1>
 
   <table>
@@ -61,29 +85,43 @@
         <th>Nama Rekening</th>
         <th>No Rekening</th>
         <th>No HP</th>
+        <th>Status Deposit</th>
+        <th>Status Withdraw</th>
       </tr>
     </thead>
     <tbody id="userList"></tbody>
   </table>
 
   <script>
-    const users = JSON.parse(localStorage.getItem("users")) || [];
+    let users = JSON.parse(localStorage.getItem("users")) || [];
     const tbody = document.getElementById("userList");
 
-    if (users.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="5" class="empty">Belum ada data member.</td></tr>`;
-    } else {
+    function renderUsers() {
+      tbody.innerHTML = "";
+      if (users.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="empty">Belum ada data member.</td></tr>`;
+        return;
+      }
+
       users.forEach((u, i) => {
         const row = `<tr>
           <td>${i + 1}</td>
           <td>${u.username}</td>
-          <td>${u.namaRek}</td>
-          <td>${u.norek}</td>
-          <td>${u.hp}</td>
+          <td>${u.namaRek || '-'}</td>
+          <td>${u.norek || '-'}</td>
+          <td>${u.hp || '-'}</td>
+          <td>
+            ${u.depositStatus || 'PENDING'}
+            ${u.depositStatus !== "ACCEPTED" ? `<button class="acc-button" onclick="acc(${i}, 'deposit')">ACC</button>` : ""}
+          </td>
+          <td>
+            ${u.withdrawStatus || 'PENDING'}
+            ${u.withdrawStatus !== "ACCEPTED" ? `<button class="acc-button" onclick="acc(${i}, 'withdraw')">ACC</button>` : ""}
+          </td>
         </tr>`;
         tbody.innerHTML += row;
       });
     }
-  </script>
-</body>
-</html>
+
+    function acc(index, type) {
+      if (type
