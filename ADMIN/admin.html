@@ -65,63 +65,58 @@
       background: #ffe44d;
     }
   </style>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyA2F9bh-M-XbBYj14j2i93qkZiAgQHyY1I",
+      authDomain: "slotkw-f05d1.firebaseapp.com",
+      projectId: "slotkw-f05d1",
+      storageBucket: "slotkw-f05d1.firebasestorage.app",
+      messagingSenderId: "2853362042",
+      appId: "1:2853362042:web:2253bf70a2bda70f56dec3",
+      measurementId: "G-230M21LKWM"
+    };
+
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+  </script>
 </head>
 <body>
-  <script>
-    // Cek login admin
-    if (sessionStorage.getItem("isAdmin") !== "true") {
-      alert("Akses ditolak! Silakan login sebagai admin.");
-      window.location.href = "login.html";
-    }
-  </script>
 
-  <h1>📋 Daftar Member Terdaftar</h1>
+<script>
+  // Cek login admin
+  if (sessionStorage.getItem("isAdmin") !== "true") {
+    alert("Akses ditolak! Silakan login sebagai admin.");
+    window.location.href = "login.html";
+  }
+</script>
 
-  <table>
-    <thead>
-      <tr>
-        <th>No</th>
-        <th>Username</th>
-        <th>Nama Rekening</th>
-        <th>No Rekening</th>
-        <th>No HP</th>
-        <th>Status Deposit</th>
-        <th>Status Withdraw</th>
-      </tr>
-    </thead>
-    <tbody id="userList"></tbody>
-  </table>
+<h1>📋 Daftar Member Terdaftar</h1>
 
-  <script>
-    let users = JSON.parse(localStorage.getItem("users")) || [];
-    const tbody = document.getElementById("userList");
+<table>
+  <thead>
+    <tr>
+      <th>No</th>
+      <th>Username</th>
+      <th>Nama Rekening</th>
+      <th>No Rekening</th>
+      <th>No HP</th>
+      <th>Status Deposit</th>
+      <th>Status Withdraw</th>
+    </tr>
+  </thead>
+  <tbody id="userList">
+    <tr><td colspan="7" class="empty">Memuat data...</td></tr>
+  </tbody>
+</table>
 
-    function renderUsers() {
-      tbody.innerHTML = "";
-      if (users.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="empty">Belum ada data member.</td></tr>`;
-        return;
-      }
+<script>
+  const tbody = document.getElementById("userList");
 
-      users.forEach((u, i) => {
-        const row = `<tr>
-          <td>${i + 1}</td>
-          <td>${u.username}</td>
-          <td>${u.namaRek || '-'}</td>
-          <td>${u.norek || '-'}</td>
-          <td>${u.hp || '-'}</td>
-          <td>
-            ${u.depositStatus || 'PENDING'}
-            ${u.depositStatus !== "ACCEPTED" ? `<button class="acc-button" onclick="acc(${i}, 'deposit')">ACC</button>` : ""}
-          </td>
-          <td>
-            ${u.withdrawStatus || 'PENDING'}
-            ${u.withdrawStatus !== "ACCEPTED" ? `<button class="acc-button" onclick="acc(${i}, 'withdraw')">ACC</button>` : ""}
-          </td>
-        </tr>`;
-        tbody.innerHTML += row;
-      });
-    }
-
-    function acc(index, type) {
-      if (type
+  function renderUsers() {
+    db.collection("members").get().then(snapshot => {
+      if (snapshot.empty) {
+        tbody.innerHTML = `<tr><td colspan="7" c
