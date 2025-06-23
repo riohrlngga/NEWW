@@ -19,7 +19,13 @@
     h1 {
       color: #f5c518;
       text-shadow: 0 0 8px #f5c51888;
+      margin-bottom: 20px;
+    }
+
+    .info {
       margin-bottom: 30px;
+      font-size: 16px;
+      line-height: 1.6;
     }
 
     .game-button {
@@ -57,7 +63,9 @@
   </style>
 </head>
 <body>
-  <h1>🎮 Selamat Datang di Member Area</h1>
+  <h1>🎮 Member Area</h1>
+  <div id="userInfo" class="info">Memuat data...</div>
+
   <p>Pilih game yang ingin kamu mainkan:</p>
 
   <a class="game-button" href="/NEWW/Game1/">🎰 Slot 3 Kolom</a>
@@ -66,7 +74,22 @@
   <div class="logout" onclick="logout()">🚪 Logout</div>
 
   <script>
+    const user = JSON.parse(sessionStorage.getItem("loggedInUser"));
+    
+    if (!user) {
+      alert("Anda belum login!");
+      window.location.href = "index.html";
+    } else {
+      document.getElementById("userInfo").innerHTML = `
+        👤 Username: <b>${user.username}</b><br>
+        💳 Nama Rekening: ${user.namaRek}<br>
+        🔢 No Rekening: ${user.norek}<br>
+        📱 No HP: ${user.hp}
+      `;
+    }
+
     function logout() {
+      sessionStorage.removeItem("loggedInUser");
       alert("Logout berhasil!");
       window.location.href = "index.html";
     }
