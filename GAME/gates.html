@@ -1,3 +1,4 @@
+<!-- Slot Game Gates Style - Lengkap dengan GSAP Tumble, Free Spin, Firebase Sync -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -32,6 +33,8 @@
       padding: 10px;
       border-radius: 10px;
       margin-bottom: 15px;
+      position: relative;
+      overflow: hidden;
     }
     .slot-cell img {
       width: 100%;
@@ -68,6 +71,7 @@
   </style>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 </head>
 <body>
   <div class="top-bar">
@@ -123,6 +127,8 @@
     let currentBet = 400;
     let autoSpinCount = 0;
     let isSpinning = false;
+    let isFreeSpin = false;
+    let freeSpinCount = 0;
 
     const symbols = [
       'mahkota-removebg-preview.png',
@@ -176,30 +182,42 @@
       updateUI();
     }
 
-    function generateGrid() {
+    function generateGridWithTumble() {
       grid.innerHTML = '';
       for (let i = 0; i < 12; i++) {
         const div = document.createElement('div');
         div.classList.add('slot-cell');
         const img = document.createElement('img');
         img.src = symbols[Math.floor(Math.random() * symbols.length)];
+        img.style.transform = 'translateY(-150px)';
         div.appendChild(img);
         grid.appendChild(div);
+        gsap.to(img, {
+          y: 0,
+          duration: 0.5,
+          ease: 'bounce.out',
+          delay: i * 0.02
+        });
       }
     }
 
     function calculateWin(callback) {
-      const win = Math.floor(Math.random() * 120000);
+      let multiplier = Math.random();
+      let win = Math.floor(currentBet * (multiplier * 5));
+
       saldo += win;
       updateFirestore();
+
       let msg = '';
       if (win >= 40000) msg = 'GILE LU NDROO!';
       else if (win >= 30000) msg = 'KAMU KEREN!';
       else if (win >= 10000) msg = 'MANTAP!';
+
       if (msg) {
         winMessage.textContent = msg + ' +Rp' + win.toLocaleString();
       }
       updateUI();
+
       setTimeout(() => {
         winMessage.textContent = '';
         if (callback) callback();
@@ -208,26 +226,45 @@
 
     function spin() {
       if (isSpinning) return;
-      if (saldo < currentBet) {
+      if (!isFreeSpin && saldo < currentBet) {
         alert('Saldo tidak cukup!');
         return;
       }
+
       isSpinning = true;
       spinButton.disabled = true;
-      saldo -= currentBet;
-      updateFirestore();
+
+      if (!isFreeSpin) {
+        saldo -= currentBet;
+        updateFirestore();
+      }
+
       updateUI();
-      generateGrid();
+      generateGridWithTumble();
+
       const speed = document.getElementById('speedSelect').value;
       const delay = speed === 'fast' ? 500 : 1000;
+
       setTimeout(() => {
         calculateWin(() => {
-          autoSpinCount = parseInt(document.getElementById('autoSpinSelect').value);
-          isSpinning = false;
-          spinButton.disabled = false;
-          if (autoSpinCount > 0) {
-            autoSpinCount--;
-            setTimeout(spin, delay);
+          if (isFreeSpin) {
+            freeSpinCount--;
+            if (freeSpinCount > 0) {
+              setTimeout(spin, delay);
+            } else {
+              isFreeSpin = false;
+              alert('Free spin selesai!');
+              spinButton.disabled = false;
+              isSpinning = false;
+            }
+          } else {
+            autoSpinCount = parseInt(document.getElementById('autoSpinSelect').value);
+            isSpinning = false;
+            spinButton.disabled = false;
+            if (autoSpinCount > 0) {
+              autoSpinCount--;
+              setTimeout(spin, delay);
+            }
           }
         });
       }, delay);
@@ -242,10 +279,13 @@
       saldo -= price;
       updateFirestore();
       updateUI();
-      alert('Bonus dibeli! Free spin akan segera dimulai (fitur lanjut)!');
+      alert('Bonus dibeli! Free spin dimulai!');
+      isFreeSpin = true;
+      freeSpinCount = 10;
+      spin();
     }
 
-    generateGrid();
+    generateGridWithTumble();
   </script>
 </body>
 </html>
