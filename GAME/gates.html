@@ -1,4 +1,4 @@
-<!-- Slot Game Gates Style - Lengkap dengan GSAP Tumble, Free Spin, Firebase Sync -->
+<!-- Slot Game Gates Style - Hitungan Berdasarkan Simbol Nyata, Free Spin, GSAP, Firestore -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -129,6 +129,7 @@
     let isSpinning = false;
     let isFreeSpin = false;
     let freeSpinCount = 0;
+    let freeSpinTotalWin = 0;
 
     const symbols = [
       'mahkota-removebg-preview.png',
@@ -138,6 +139,15 @@
       'gemshijau-removebg-preview.png',
       'zeus-removebg-preview.png'
     ];
+
+    const symbolValues = {
+      'mahkota-removebg-preview.png': 50,
+      'jampasir-removebg-preview.png': 25,
+      'cincin-removebg-preview.png': 15,
+      'cawan-removebg-preview.png': 10,
+      'gemshijau-removebg-preview.png': 5,
+      'zeus-removebg-preview.png': 0 // scatter only
+    };
 
     const saldoDisplay = document.getElementById('saldo');
     const betDisplay = document.getElementById('currentBet');
@@ -182,16 +192,22 @@
       updateUI();
     }
 
+    let currentGrid = [];
     function generateGridWithTumble() {
+      currentGrid = [];
       grid.innerHTML = '';
+      let scatterCount = 0;
       for (let i = 0; i < 12; i++) {
         const div = document.createElement('div');
         div.classList.add('slot-cell');
         const img = document.createElement('img');
-        img.src = symbols[Math.floor(Math.random() * symbols.length)];
+        const sym = symbols[Math.floor(Math.random() * symbols.length)];
+        img.src = sym;
+        if (sym.includes('zeus')) scatterCount++;
         img.style.transform = 'translateY(-150px)';
         div.appendChild(img);
         grid.appendChild(div);
+        currentGrid.push(sym);
         gsap.to(img, {
           y: 0,
           duration: 0.5,
@@ -199,13 +215,30 @@
           delay: i * 0.02
         });
       }
+      if (scatterCount >= 4 && !isFreeSpin) {
+        alert('Kamu dapat 12 Free Spin!');
+        isFreeSpin = true;
+        freeSpinCount = 12;
+        freeSpinTotalWin = 0;
+      }
     }
 
     function calculateWin(callback) {
-      let multiplier = Math.random();
-      let win = Math.floor(currentBet * (multiplier * 5));
-
-      saldo += win;
+      const counts = {};
+      currentGrid.forEach(sym => {
+        counts[sym] = (counts[sym] || 0) + 1;
+      });
+      let win = 0;
+      for (let sym in counts) {
+        if (counts[sym] >= 8) {
+          win += currentBet * symbolValues[sym];
+        }
+      }
+      if (isFreeSpin) {
+        freeSpinTotalWin += win;
+      } else {
+        saldo += win;
+      }
       updateFirestore();
 
       let msg = '';
@@ -215,13 +248,15 @@
 
       if (msg) {
         winMessage.textContent = msg + ' +Rp' + win.toLocaleString();
+      } else {
+        winMessage.textContent = win > 0 ? '+Rp' + win.toLocaleString() : '';
       }
       updateUI();
 
       setTimeout(() => {
         winMessage.textContent = '';
         if (callback) callback();
-      }, 2500);
+      }, 1500);
     }
 
     function spin() {
@@ -252,10 +287,13 @@
             if (freeSpinCount > 0) {
               setTimeout(spin, delay);
             } else {
+              saldo += freeSpinTotalWin;
+              alert('Free Spin selesai! Total menang: Rp' + freeSpinTotalWin.toLocaleString());
               isFreeSpin = false;
-              alert('Free spin selesai!');
+              freeSpinTotalWin = 0;
               spinButton.disabled = false;
               isSpinning = false;
+              updateFirestore();
             }
           } else {
             autoSpinCount = parseInt(document.getElementById('autoSpinSelect').value);
@@ -281,7 +319,8 @@
       updateUI();
       alert('Bonus dibeli! Free spin dimulai!');
       isFreeSpin = true;
-      freeSpinCount = 10;
+      freeSpinCount = 12;
+      freeSpinTotalWin = 0;
       spin();
     }
 
