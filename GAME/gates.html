@@ -112,14 +112,7 @@
   </div>
 
   <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyA2F9bh-M-XbBYj14j2i93qkZiAgQHyY1I",
-      authDomain: "slotkw-f05d1.firebaseapp.com",
-      projectId: "slotkw-f05d1",
-      storageBucket: "slotkw-f05d1.appspot.com",
-      messagingSenderId: "2853362042",
-      appId: "1:2853362042:web:2253bf70a2bda70f56dec3"
-    };
+    const firebaseConfig = { /* config seperti di atas */ };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
@@ -229,8 +222,9 @@
       });
       let win = 0;
       for (let sym in counts) {
-        if (counts[sym] >= 8) {
-          win += currentBet * symbolValues[sym];
+        if (counts[sym] >= 3) {
+          const multiplier = isFreeSpin ? 10 : 6;
+          win += currentBet * multiplier;
         }
       }
       if (isFreeSpin) {
