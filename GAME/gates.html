@@ -39,6 +39,11 @@
       border-radius: 10px;
       margin-bottom: 15px;
     }
+    .slot-cell {
+      border: 2px solid #ffffff33;
+      border-radius: 8px;
+      overflow: hidden;
+    }
     .slot-cell img {
       width: 100%;
       height: 100%;
@@ -112,7 +117,14 @@
   </div>
 
   <script>
-    const firebaseConfig = { /* config seperti di atas */ };
+    const firebaseConfig = {
+      apiKey: "AIzaSyA2F9bh-M-XbBYj14j2i93qkZiAgQHyY1I",
+      authDomain: "slotkw-f05d1.firebaseapp.com",
+      projectId: "slotkw-f05d1",
+      storageBucket: "slotkw-f05d1.appspot.com",
+      messagingSenderId: "2853362042",
+      appId: "1:2853362042:web:2253bf70a2bda70f56dec3"
+    };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
@@ -135,15 +147,6 @@
       'gemshijau-removebg-preview.png',
       'zeus-removebg-preview.png'
     ];
-
-    const symbolValues = {
-      'mahkota-removebg-preview.png': 50,
-      'jampasir-removebg-preview.png': 25,
-      'cincin-removebg-preview.png': 15,
-      'cawan-removebg-preview.png': 10,
-      'gemshijau-removebg-preview.png': 5,
-      'zeus-removebg-preview.png': 0
-    };
 
     const saldoDisplay = document.getElementById('saldo');
     const betDisplay = document.getElementById('currentBet');
@@ -222,7 +225,7 @@
       });
       let win = 0;
       for (let sym in counts) {
-        if (counts[sym] >= 3) {
+        if (counts[sym] >= 3 && sym !== 'zeus-removebg-preview.png') {
           const multiplier = isFreeSpin ? 10 : 6;
           win += currentBet * multiplier;
         }
