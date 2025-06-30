@@ -1,4 +1,3 @@
-<!-- Gates of Olympus Slot Game - Final with Cluster Logic, Multiplier, and Free Scatter Detection -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -131,46 +130,263 @@
     <div class="win-message" id="winMessage"></div>
   </div>
   <script>
-    // ... (seluruh script tetap, tapi tambahkan ini dalam function createGrid setelah grid dibuat):
-    function checkFreeScatter() {
-      for (let row = 0; row < ROWS; row++) {
-        let match = true;
-        for (let col = 0; col < 4; col++) {
-          if (currentGrid[row][col] !== 'zeus-removebg-preview.png') {
-            match = false;
-            break;
-          }
-        }
-        if (match) return true;
-      }
-      return false;
-    }
+let saldo = 100000;
+let currentBet = 1000;
+let autoSpinCount = 0;
+let isSpinning = false;
+let isFreeSpin = false;
+let freeSpinCount = 0;
+let freeSpinTotalWin = 0;
+let spinCount = 0;
+let activeMultiplier = 1;
+const ROWS = 5;
+const COLS = 6;
+const symbols = [
+  'mahkota-removebg-preview.png',
+  'jampasir-removebg-preview.png',
+  'cincin-removebg-preview.png',
+  'cawan-removebg-preview.png',
+  'gemshijau-removebg-preview.png',
+  'zeus-removebg-preview.png'
+];
 
-    // Panggil checkFreeScatter setelah createGrid
-    function createGrid() {
-      currentGrid = Array.from({ length: ROWS }, () => []);
-      grid.innerHTML = '';
-      for (let row = 0; row < ROWS; row++) {
-        for (let col = 0; col < COLS; col++) {
-          const sym = symbols[Math.floor(Math.random() * symbols.length)];
-          currentGrid[row][col] = sym;
-          const cell = document.createElement('div');
-          cell.className = 'slot-cell';
-          const img = document.createElement('img');
-          img.src = sym;
-          cell.appendChild(img);
-          grid.appendChild(cell);
-        }
-      }
+const grid = document.getElementById('slotGrid');
+const saldoDisplay = document.getElementById('saldo');
+const betDisplay = document.getElementById('currentBet');
+const winMessage = document.getElementById('winMessage');
+const spinButton = document.getElementById('spinButton');
+let currentGrid = [];
 
-      // Cek scatter gratis setelah grid selesai dibuat
-      if (!isFreeSpin && checkFreeScatter()) {
-        isFreeSpin = true;
-        freeSpinCount = 12;
-        freeSpinTotalWin = 0;
-        alert('Scatter Gratis! Kamu dapat 12 Free Spin!');
+function updateUI() {
+  saldoDisplay.textContent = saldo;
+  betDisplay.textContent = currentBet;
+}
+
+function topUp() {
+  saldo += 100000;
+  updateUI();
+}
+
+function increaseBet() {
+  if (currentBet < 100000) currentBet += 100;
+  updateUI();
+}
+
+function decreaseBet() {
+  if (currentBet > 100) currentBet -= 100;
+  updateUI();
+}
+
+function checkFreeScatter() {
+  for (let row = 0; row < ROWS; row++) {
+    let match = true;
+    for (let col = 0; col < 4; col++) {
+      if (currentGrid[row][col] !== 'zeus-removebg-preview.png') {
+        match = false;
+        break;
       }
     }
-  </script>
+    if (match) return true;
+  }
+  return false;
+}
+
+function createGrid() {
+  currentGrid = Array.from({ length: ROWS }, () => []);
+  grid.innerHTML = '';
+  for (let row = 0; row < ROWS; row++) {
+    for (let col = 0; col < COLS; col++) {
+      const sym = symbols[Math.floor(Math.random() * symbols.length)];
+      currentGrid[row][col] = sym;
+      const cell = document.createElement('div');
+      cell.className = 'slot-cell';
+      const img = document.createElement('img');
+      img.src = sym;
+      cell.appendChild(img);
+      grid.appendChild(cell);
+    }
+  }
+  if (!isFreeSpin && checkFreeScatter()) {
+    isFreeSpin = true;
+    freeSpinCount = 12;
+    freeSpinTotalWin = 0;
+    alert('Scatter Gratis! Kamu dapat 12 Free Spin!');
+  }
+}
+
+function detectClusterWins() {
+  const visited = Array.from({ length: ROWS }, () => Array(COLS).fill(false));
+  const clusters = [];
+  function dfs(r, c, symbol, group) {
+    if (r < 0 || r >= ROWS || c < 0 || c >= COLS || visited[r][c]) return;
+    if (currentGrid[r][c] !== symbol) return;
+    visited[r][c] = true;
+    group.push([r, c]);
+    dfs(r - 1, c, symbol, group);
+    dfs(r + 1, c, symbol, group);
+    dfs(r, c - 1, symbol, group);
+    dfs(r, c + 1, symbol, group);
+  }
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      if (!visited[r][c]) {
+        const group = [];
+        dfs(r, c, currentGrid[r][c], group);
+        if (group.length >= 8 && currentGrid[r][c] !== 'zeus-removebg-preview.png') {
+          clusters.push(group);
+        }
+      }
+    }
+  }
+  return clusters;
+}
+
+function tumble(callback) {
+  const clusters = detectClusterWins();
+  if (clusters.length === 0) {
+    if (callback) callback();
+    return;
+  }
+  let winAmount = 0;
+  clusters.forEach(group => {
+    winAmount += currentBet * (isFreeSpin ? 10 : 6) * activeMultiplier;
+    group.forEach(([r, c]) => {
+      const index = r * COLS + c;
+      const img = grid.children[index].querySelector('img');
+      img.classList.add('fade-out');
+      setTimeout(() => img.remove(), 300);
+      currentGrid[r][c] = null;
+    });
+  });
+  if (isFreeSpin) freeSpinTotalWin += winAmount;
+  else saldo += winAmount;
+  showWinMessage(winAmount);
+  setTimeout(() => animateTumble(callback), 400);
+}
+
+function animateTumble(callback) {
+  for (let col = 0; col < COLS; col++) {
+    let stack = [];
+    for (let row = ROWS - 1; row >= 0; row--) {
+      if (currentGrid[row][col]) stack.push(currentGrid[row][col]);
+    }
+    while (stack.length < ROWS) {
+      stack.push(symbols[Math.floor(Math.random() * symbols.length)]);
+    }
+    for (let row = ROWS - 1; row >= 0; row--) {
+      currentGrid[row][col] = stack[ROWS - 1 - row];
+    }
+  }
+  renderGrid();
+  setTimeout(() => tumble(callback), 300);
+}
+
+function renderGrid() {
+  grid.innerHTML = '';
+  for (let row = 0; row < ROWS; row++) {
+    for (let col = 0; col < COLS; col++) {
+      const sym = currentGrid[row][col];
+      const cell = document.createElement('div');
+      cell.className = 'slot-cell';
+      const img = document.createElement('img');
+      img.src = sym;
+      cell.appendChild(img);
+      grid.appendChild(cell);
+    }
+  }
+}
+
+function showWinMessage(win) {
+  const msg = win >= 40000 ? 'GILE LU NDROO!' : win >= 30000 ? 'KAMU KEREN!' : win >= 10000 ? 'MANTAP!' : '';
+  winMessage.textContent = win > 0 ? `${msg} +Rp${win.toLocaleString()} ×${activeMultiplier}` : '';
+  setTimeout(() => winMessage.textContent = '', 1500);
+}
+
+function spin() {
+  if (isSpinning) return;
+  if (!isFreeSpin && saldo < currentBet) {
+    alert('Saldo tidak cukup!');
+    return;
+  }
+  isSpinning = true;
+  spinButton.disabled = true;
+  if (!isFreeSpin) saldo -= currentBet;
+  spinCount++;
+  activeMultiplier = 1;
+  if (spinCount >= 10) {
+    const multipliers = [2, 3, 5, 10, 25, 50, 100];
+    const weights = [30, 25, 20, 10, 8, 5, 2];
+    const total = weights.reduce((a, b) => a + b);
+    let rand = Math.random() * total, sum = 0;
+    for (let i = 0; i < multipliers.length; i++) {
+      sum += weights[i];
+      if (rand < sum) {
+        activeMultiplier = multipliers[i];
+        break;
+      }
+    }
+    spinCount = 0;
+    const m = document.createElement('div');
+    m.style.position = 'absolute';
+    m.style.top = '45%';
+    m.style.left = '50%';
+    m.style.transform = 'translate(-50%, -50%)';
+    m.style.fontSize = '48px';
+    m.style.color = 'yellow';
+    m.style.fontWeight = 'bold';
+    m.style.textShadow = '2px 2px 10px #000';
+    m.textContent = `×${activeMultiplier}`;
+    document.body.appendChild(m);
+    setTimeout(() => m.remove(), 1500);
+  }
+  updateUI();
+  createGrid();
+  setTimeout(() => {
+    tumble(() => {
+      if (isFreeSpin) {
+        freeSpinCount--;
+        if (freeSpinCount > 0) {
+          isSpinning = false;
+          setTimeout(spin, 500);
+        } else {
+          saldo += freeSpinTotalWin;
+          alert('Free Spin selesai! Total menang: Rp' + freeSpinTotalWin.toLocaleString());
+          isFreeSpin = false;
+          freeSpinTotalWin = 0;
+          isSpinning = false;
+          spinButton.disabled = false;
+        }
+      } else {
+        autoSpinCount = parseInt(document.getElementById('autoSpinSelect').value);
+        isSpinning = false;
+        spinButton.disabled = false;
+        if (autoSpinCount > 0) {
+          autoSpinCount--;
+          setTimeout(spin, 500);
+        }
+      }
+      updateUI();
+    });
+  }, 300);
+}
+
+function buyScatter() {
+  const price = 30000 * (currentBet / 400);
+  if (saldo < price) {
+    alert('Saldo tidak cukup untuk beli scatter!');
+    return;
+  }
+  saldo -= price;
+  updateUI();
+  isFreeSpin = true;
+  freeSpinCount = 12;
+  freeSpinTotalWin = 0;
+  alert('Bonus dibeli! Free spin dimulai!');
+  spin();
+}
+
+updateUI();
+createGrid();
+</script>
 </body>
 </html>
