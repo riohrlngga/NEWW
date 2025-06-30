@@ -1,4 +1,4 @@
-<!-- Gates of Olympus Slot Game - Full Final Version with Tumble & Visuals -->
+<!-- Gates of Olympus Slot Game - Final with Cluster Logic -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -194,44 +194,56 @@
       }
     }
 
-    function detectWins() {
-      const flat = currentGrid.flat();
-      const counts = {};
-      for (let sym of flat) {
-        counts[sym] = (counts[sym] || 0) + 1;
+    function detectClusterWins() {
+      const visited = Array.from({ length: ROWS }, () => Array(COLS).fill(false));
+      const clusters = [];
+
+      function dfs(r, c, symbol, group) {
+        if (r < 0 || r >= ROWS || c < 0 || c >= COLS || visited[r][c]) return;
+        if (currentGrid[r][c] !== symbol) return;
+        visited[r][c] = true;
+        group.push([r, c]);
+        dfs(r - 1, c, symbol, group);
+        dfs(r + 1, c, symbol, group);
+        dfs(r, c - 1, symbol, group);
+        dfs(r, c + 1, symbol, group);
       }
-      return Object.entries(counts).filter(([sym, count]) => count >= 8 && sym !== 'zeus-removebg-preview.png');
+
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          if (!visited[r][c]) {
+            const group = [];
+            dfs(r, c, currentGrid[r][c], group);
+            if (group.length >= 8 && currentGrid[r][c] !== 'zeus-removebg-preview.png') {
+              clusters.push(group);
+            }
+          }
+        }
+      }
+      return clusters;
     }
 
     function tumble(callback) {
-      const wins = detectWins();
-      if (wins.length === 0) {
+      const clusters = detectClusterWins();
+      if (clusters.length === 0) {
         if (callback) callback();
         return;
       }
 
       let winAmount = 0;
-      for (let [sym, count] of wins) {
-        const multiplier = isFreeSpin ? 10 : 6;
-        winAmount += currentBet * multiplier;
-        for (let row = 0; row < ROWS; row++) {
-          for (let col = 0; col < COLS; col++) {
-            if (currentGrid[row][col] === sym) {
-              const index = row * COLS + col;
-              const img = grid.children[index].querySelector('img');
-              img.classList.add('fade-out');
-              setTimeout(() => img.remove(), 300);
-              currentGrid[row][col] = null;
-            }
-          }
-        }
-      }
+      clusters.forEach(group => {
+        winAmount += currentBet * (isFreeSpin ? 10 : 6);
+        group.forEach(([r, c]) => {
+          const index = r * COLS + c;
+          const img = grid.children[index].querySelector('img');
+          img.classList.add('fade-out');
+          setTimeout(() => img.remove(), 300);
+          currentGrid[r][c] = null;
+        });
+      });
 
-      if (isFreeSpin) {
-        freeSpinTotalWin += winAmount;
-      } else {
-        saldo += winAmount;
-      }
+      if (isFreeSpin) freeSpinTotalWin += winAmount;
+      else saldo += winAmount;
 
       showWinMessage(winAmount);
       setTimeout(() => animateTumble(callback), 400);
