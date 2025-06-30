@@ -1,9 +1,9 @@
-<!-- Gates of Olympus Slot Game with Full Tumble Effect -->
+<!-- Gates of Olympus Slot Game - Full Final Version with Tumble & Visuals -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Gates of Olympus Slot</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -16,9 +16,7 @@
       align-items: center;
       justify-content: flex-start;
       min-height: 100vh;
-      position: relative;
     }
-
     .top-bar {
       width: 90vw;
       max-width: 700px;
@@ -27,9 +25,7 @@
       margin: 20px auto 10px;
       font-size: 18px;
       font-weight: bold;
-      text-shadow: 1px 1px 3px #000;
     }
-
     .slot-grid {
       display: grid;
       grid-template-columns: repeat(6, 1fr);
@@ -38,12 +34,11 @@
       background: rgba(0, 0, 0, 0.5);
       padding: 10px;
       border-radius: 15px;
-      box-shadow: 0 0 25px gold;
       width: 90vw;
       max-width: 700px;
       aspect-ratio: 6/5;
+      position: relative;
     }
-
     .slot-cell {
       background: rgba(255, 255, 255, 0.1);
       border: 2px solid #fff2;
@@ -52,16 +47,15 @@
       align-items: center;
       justify-content: center;
       overflow: hidden;
+      position: relative;
     }
-
     .slot-cell img {
       max-width: 100%;
       max-height: 100%;
       object-fit: contain;
       filter: drop-shadow(0 0 6px gold);
-      transition: transform 0.3s ease;
+      transition: transform 0.3s ease, opacity 0.3s ease;
     }
-
     .controls {
       display: flex;
       flex-direction: column;
@@ -71,12 +65,10 @@
       max-width: 700px;
       margin-top: 20px;
     }
-
     .controls > div {
       display: flex;
       gap: 10px;
     }
-
     button, select {
       padding: 10px 15px;
       font-size: 14px;
@@ -88,36 +80,34 @@
       cursor: pointer;
       box-shadow: 0 0 10px #ffcc00;
     }
-
     button:hover {
       background: #ffb300;
       transform: scale(1.05);
     }
-
     .win-message {
       font-size: 22px;
       font-weight: bold;
       color: gold;
-      text-shadow: 2px 2px 5px #000;
-      animation: pop 0.5s ease-out;
       margin-top: 10px;
     }
-
-    @keyframes pop {
-      0% { transform: scale(0.5); opacity: 0; }
-      100% { transform: scale(1); opacity: 1; }
+    .fade-out {
+      animation: fadeOut 0.3s forwards;
+    }
+    @keyframes fadeOut {
+      to {
+        opacity: 0;
+        transform: scale(0.6);
+      }
     }
   </style>
 </head>
 <body>
   <div class="top-bar">
     <div>Saldo: <span id="saldo">100000</span></div>
-    <div>Bet: <span id="currentBet">400</span></div>
+    <div>Bet: <span id="currentBet">1000</span></div>
     <div><button onclick="topUp()">Top Up</button></div>
   </div>
-
   <div class="slot-grid" id="slotGrid"></div>
-
   <div class="controls">
     <div>
       <button onclick="decreaseBet()">-</button>
@@ -140,10 +130,9 @@
     </div>
     <div class="win-message" id="winMessage"></div>
   </div>
-
   <script>
     let saldo = 100000;
-    let currentBet = 400;
+    let currentBet = 1000;
     let autoSpinCount = 0;
     let isSpinning = false;
     let isFreeSpin = false;
@@ -151,12 +140,6 @@
     let freeSpinTotalWin = 0;
     const ROWS = 5;
     const COLS = 6;
-    const grid = document.getElementById('slotGrid');
-    const saldoDisplay = document.getElementById('saldo');
-    const betDisplay = document.getElementById('currentBet');
-    const winMessage = document.getElementById('winMessage');
-    const spinButton = document.getElementById('spinButton');
-
     const symbols = [
       'mahkota-removebg-preview.png',
       'jampasir-removebg-preview.png',
@@ -165,6 +148,12 @@
       'gemshijau-removebg-preview.png',
       'zeus-removebg-preview.png'
     ];
+
+    const grid = document.getElementById('slotGrid');
+    const saldoDisplay = document.getElementById('saldo');
+    const betDisplay = document.getElementById('currentBet');
+    const winMessage = document.getElementById('winMessage');
+    const spinButton = document.getElementById('spinButton');
 
     let currentGrid = [];
 
@@ -179,12 +168,12 @@
     }
 
     function increaseBet() {
-      if (currentBet < 100000) currentBet += 400;
+      if (currentBet < 100000) currentBet += 100;
       updateUI();
     }
 
     function decreaseBet() {
-      if (currentBet > 400) currentBet -= 400;
+      if (currentBet > 100) currentBet -= 100;
       updateUI();
     }
 
@@ -228,6 +217,10 @@
         for (let row = 0; row < ROWS; row++) {
           for (let col = 0; col < COLS; col++) {
             if (currentGrid[row][col] === sym) {
+              const index = row * COLS + col;
+              const img = grid.children[index].querySelector('img');
+              img.classList.add('fade-out');
+              setTimeout(() => img.remove(), 300);
               currentGrid[row][col] = null;
             }
           }
@@ -241,7 +234,7 @@
       }
 
       showWinMessage(winAmount);
-      animateTumble(callback);
+      setTimeout(() => animateTumble(callback), 400);
     }
 
     function animateTumble(callback) {
@@ -257,11 +250,8 @@
           currentGrid[row][col] = stack[ROWS - 1 - row];
         }
       }
-
-      setTimeout(() => {
-        renderGrid();
-        setTimeout(() => tumble(callback), 500);
-      }, 300);
+      renderGrid();
+      setTimeout(() => tumble(callback), 300);
     }
 
     function renderGrid() {
