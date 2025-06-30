@@ -8,7 +8,352 @@
   <style>
     * { box-sizing: border-box; }
     body {
+      font-family: sans-serif;<!-- Gates Slot Game - Final Cleaned & Styled Like Real Slot -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gates Slot</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
       font-family: sans-serif;
+      color: #fff;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+      overflow-y: auto;
+      background-color: #1a0033;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: url('latar%20belakang.png') center/cover no-repeat fixed;
+      filter: blur(6px) brightness(0.5);
+      z-index: -1;
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      width: 90vw;
+      max-width: 400px;
+      margin: 20px auto 10px;
+      font-size: 18px;
+      font-weight: bold;
+      text-shadow: 1px 1px 3px black;
+    }
+
+    .slot-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      aspect-ratio: 4/3;
+      width: 90vw;
+      max-width: 400px;
+      background-color: rgba(86, 42, 134, 0.7);
+      box-shadow: 0 0 20px #ffc400;
+      border-radius: 10px;
+      gap: 5px;
+      padding: 10px;
+      margin-bottom: 15px;
+    }
+
+    .slot-cell {
+      border: 2px solid #ffffff33;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .slot-cell img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      filter: drop-shadow(0 0 6px gold);
+    }
+
+    .controls {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      width: 90vw;
+      max-width: 400px;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    button, select {
+      padding: 8px;
+      border: none;
+      border-radius: 5px;
+      background: linear-gradient(#ffa500, #ff6f00);
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 14px;
+      box-shadow: 0 0 5px #ffbf00;
+    }
+
+    button:hover {
+      transform: scale(1.05);
+      background: #ffc107;
+    }
+
+    .win-message {
+      font-size: 20px;
+      font-weight: bold;
+      margin-top: 10px;
+      text-align: center;
+      animation: pop 0.5s ease-out;
+    }
+
+    @keyframes pop {
+      0% { transform: scale(0.5); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+  </style>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+</head>
+<body>
+  <div class="top-bar">
+    <div>Saldo: <span id="saldo">...</span></div>
+    <div>Bet: <span id="currentBet">400</span></div>
+    <div><button onclick="topUp()">Top Up</button></div>
+  </div>
+
+  <div class="slot-grid" id="slotGrid"></div>
+
+  <div class="controls">
+    <div>
+      <button onclick="decreaseBet()">-</button>
+      <button onclick="increaseBet()">+</button>
+      <button onclick="buyScatter()">Beli Bonus</button>
+    </div>
+    <div>
+      <button id="spinButton" onclick="spin()">SPIN</button>
+      <select id="speedSelect">
+        <option value="normal">Normal Spin</option>
+        <option value="fast">Fast Spin</option>
+      </select>
+      <select id="autoSpinSelect">
+        <option value="0">Manual</option>
+        <option value="10">Auto x10</option>
+        <option value="30">Auto x30</option>
+        <option value="50">Auto x50</option>
+        <option value="100">Auto x100</option>
+      </select>
+    </div>
+    <div class="win-message" id="winMessage"></div>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyA2F9bh-M-XbBYj14j2i93qkZiAgQHyY1I",
+      authDomain: "slotkw-f05d1.firebaseapp.com",
+      projectId: "slotkw-f05d1",
+      storageBucket: "slotkw-f05d1.appspot.com",
+      messagingSenderId: "2853362042",
+      appId: "1:2853362042:web:2253bf70a2bda70f56dec3"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const user = JSON.parse(sessionStorage.getItem("loggedInUser"));
+    if (!user || !user.id) {
+      alert("Anda belum login!");
+      window.location.href = "../index.html";
+    }
+
+    let saldo = 0, currentBet = 400, autoSpinCount = 0;
+    let isSpinning = false, isFreeSpin = false;
+    let freeSpinCount = 0, freeSpinTotalWin = 0;
+    let currentGrid = [];
+
+    const symbols = [
+      'mahkota-removebg-preview.png',
+      'jampasir-removebg-preview.png',
+      'cincin-removebg-preview.png',
+      'cawan-removebg-preview.png',
+      'gemshijau-removebg-preview.png',
+      'zeus-removebg-preview.png'
+    ];
+
+    const saldoDisplay = document.getElementById('saldo');
+    const betDisplay = document.getElementById('currentBet');
+    const grid = document.getElementById('slotGrid');
+    const winMessage = document.getElementById('winMessage');
+    const spinButton = document.getElementById('spinButton');
+
+    db.collection("members").doc(user.id).onSnapshot(doc => {
+      if (doc.exists) {
+        saldo = doc.data().saldo || 0;
+        updateUI();
+      }
+    });
+
+    function updateFirestore() {
+      db.collection("members").doc(user.id).update({
+        saldo: saldo,
+        turnover: firebase.firestore.FieldValue.increment(currentBet),
+        currentGame: "Slot",
+        lastPlayedAt: new Date()
+      });
+    }
+
+    function updateUI() {
+      saldoDisplay.textContent = saldo;
+      betDisplay.textContent = currentBet;
+    }
+
+    function topUp() {
+      saldo += 100000;
+      updateFirestore();
+      updateUI();
+    }
+
+    function increaseBet() {
+      if (currentBet < 100000) currentBet += 400;
+      updateUI();
+    }
+
+    function decreaseBet() {
+      if (currentBet > 400) currentBet -= 400;
+      updateUI();
+    }
+
+    function generateGridWithTumble() {
+      currentGrid = [];
+      grid.innerHTML = '';
+      let scatterCount = 0;
+      for (let i = 0; i < 12; i++) {
+        const div = document.createElement('div');
+        div.classList.add('slot-cell');
+        const img = document.createElement('img');
+        const sym = symbols[Math.floor(Math.random() * symbols.length)];
+        img.src = sym;
+        img.style.transform = 'translateY(-150px)';
+        div.appendChild(img);
+        grid.appendChild(div);
+        currentGrid.push(sym);
+        gsap.to(img, {
+          y: 0, duration: 0.5, ease: 'bounce.out', delay: i * 0.02
+        });
+        if (sym.includes('zeus')) scatterCount++;
+      }
+      if (scatterCount >= 4 && !isFreeSpin) {
+        isFreeSpin = true;
+        freeSpinCount = 12;
+        freeSpinTotalWin = 0;
+        alert('Kamu dapat 12 Free Spin!');
+      }
+    }
+
+    function calculateWin(callback) {
+      const counts = {};
+      currentGrid.forEach(sym => {
+        counts[sym] = (counts[sym] || 0) + 1;
+      });
+      let win = 0;
+      for (let sym in counts) {
+        if (counts[sym] >= 3 && sym !== 'zeus-removebg-preview.png') {
+          const multiplier = isFreeSpin ? 10 : 6;
+          win += currentBet * multiplier;
+        }
+      }
+      if (isFreeSpin) {
+        freeSpinTotalWin += win;
+      } else {
+        saldo += win;
+      }
+      updateFirestore();
+      let msg = '';
+      if (win >= 40000) msg = 'GILE LU NDROO!';
+      else if (win >= 30000) msg = 'KAMU KEREN!';
+      else if (win >= 10000) msg = 'MANTAP!';
+      winMessage.textContent = win > 0 ? (msg + ' +Rp' + win.toLocaleString()) : '';
+      updateUI();
+      setTimeout(() => {
+        winMessage.textContent = '';
+        if (callback) callback();
+      }, 1500);
+    }
+
+    function spin() {
+      if (isSpinning) return;
+      if (!isFreeSpin && saldo < currentBet) {
+        alert('Saldo tidak cukup!');
+        return;
+      }
+      isSpinning = true;
+      spinButton.disabled = true;
+      if (!isFreeSpin) {
+        saldo -= currentBet;
+        updateFirestore();
+      }
+      updateUI();
+      generateGridWithTumble();
+      const speed = document.getElementById('speedSelect').value;
+      const delay = speed === 'fast' ? 500 : 1000;
+      setTimeout(() => {
+        calculateWin(() => {
+          if (isFreeSpin) {
+            freeSpinCount--;
+            if (freeSpinCount > 0) {
+              isSpinning = false;
+              setTimeout(spin, delay);
+            } else {
+              saldo += freeSpinTotalWin;
+              alert('Free Spin selesai! Total menang: Rp' + freeSpinTotalWin.toLocaleString());
+              isFreeSpin = false;
+              freeSpinTotalWin = 0;
+              spinButton.disabled = false;
+              isSpinning = false;
+              updateFirestore();
+            }
+          } else {
+            autoSpinCount = parseInt(document.getElementById('autoSpinSelect').value);
+            isSpinning = false;
+            spinButton.disabled = false;
+            if (autoSpinCount > 0) {
+              autoSpinCount--;
+              setTimeout(spin, delay);
+            }
+          }
+        });
+      }, delay);
+    }
+
+    function buyScatter() {
+      const price = 30000 * (currentBet / 400);
+      if (saldo < price) {
+        alert('Saldo tidak cukup untuk beli scatter!');
+        return;
+      }
+      saldo -= price;
+      updateFirestore();
+      updateUI();
+      isFreeSpin = true;
+      freeSpinCount = 12;
+      freeSpinTotalWin = 0;
+      alert('Bonus dibeli! Free spin dimulai!');
+      spin();
+    }
+
+    generateGridWithTumble();
+  </script>
+</body>
+</html>
+
       color: #fff;
       margin: 0;
       padding: 0;
