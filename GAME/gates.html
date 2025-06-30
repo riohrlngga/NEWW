@@ -1,4 +1,4 @@
-<!-- Gates of Olympus Slot Game - Final with Cluster Logic -->
+<!-- Gates of Olympus Slot Game - Final with Cluster Logic and Multiplier -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -138,6 +138,8 @@
     let isFreeSpin = false;
     let freeSpinCount = 0;
     let freeSpinTotalWin = 0;
+    let spinCount = 0;
+    let activeMultiplier = 1;
     const ROWS = 5;
     const COLS = 6;
     const symbols = [
@@ -232,7 +234,7 @@
 
       let winAmount = 0;
       clusters.forEach(group => {
-        winAmount += currentBet * (isFreeSpin ? 10 : 6);
+        winAmount += currentBet * (isFreeSpin ? 10 : 6) * activeMultiplier;
         group.forEach(([r, c]) => {
           const index = r * COLS + c;
           const img = grid.children[index].querySelector('img');
@@ -283,7 +285,7 @@
 
     function showWinMessage(win) {
       const msg = win >= 40000 ? 'GILE LU NDROO!' : win >= 30000 ? 'KAMU KEREN!' : win >= 10000 ? 'MANTAP!' : '';
-      winMessage.textContent = win > 0 ? `${msg} +Rp${win.toLocaleString()}` : '';
+      winMessage.textContent = win > 0 ? `${msg} +Rp${win.toLocaleString()} ×${activeMultiplier}` : '';
       setTimeout(() => winMessage.textContent = '', 1500);
     }
 
@@ -296,6 +298,36 @@
       isSpinning = true;
       spinButton.disabled = true;
       if (!isFreeSpin) saldo -= currentBet;
+
+      spinCount++;
+      activeMultiplier = 1;
+      if (spinCount >= 10) {
+        const multipliers = [2, 3, 5, 10, 25, 50, 100];
+        const weights = [30, 25, 20, 10, 8, 5, 2];
+        const total = weights.reduce((a, b) => a + b);
+        let rand = Math.random() * total, sum = 0;
+        for (let i = 0; i < multipliers.length; i++) {
+          sum += weights[i];
+          if (rand < sum) {
+            activeMultiplier = multipliers[i];
+            break;
+          }
+        }
+        spinCount = 0;
+        const m = document.createElement('div');
+        m.style.position = 'absolute';
+        m.style.top = '45%';
+        m.style.left = '50%';
+        m.style.transform = 'translate(-50%, -50%)';
+        m.style.fontSize = '48px';
+        m.style.color = 'yellow';
+        m.style.fontWeight = 'bold';
+        m.style.textShadow = '2px 2px 10px #000';
+        m.textContent = `×${activeMultiplier}`;
+        document.body.appendChild(m);
+        setTimeout(() => m.remove(), 1500);
+      }
+
       updateUI();
       createGrid();
       setTimeout(() => {
