@@ -1,15 +1,14 @@
-<!-- Slot Game Gates Style - Responsive Fix, Gambar Muncul, GSAP, Free Spin -->
+<!-- Gates Slot Game - Full Revisi with Background Olympus -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Gates Slot</title>
   <style>
     * { box-sizing: border-box; }
     body {
       font-family: sans-serif;
-      background: #300a4e;
       color: #fff;
       margin: 0;
       padding: 0;
@@ -19,7 +18,20 @@
       justify-content: flex-start;
       min-height: 100vh;
       overflow-y: auto;
+      background-color: #1a0033;
     }
+
+    /* Background Olympus */
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: url('latar%20belakang.png') center/cover no-repeat fixed;
+      filter: blur(6px) brightness(0.5);
+      z-index: -1;
+    }
+
     .top-bar {
       display: flex;
       justify-content: space-between;
@@ -27,28 +39,32 @@
       max-width: 400px;
       margin: 20px auto 10px;
     }
+
     .slot-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       aspect-ratio: 4/3;
       width: 90vw;
       max-width: 400px;
-      background-color: #562a86;
+      background-color: #562a86cc;
       gap: 5px;
       padding: 10px;
       border-radius: 10px;
       margin-bottom: 15px;
     }
+
     .slot-cell {
       border: 2px solid #ffffff33;
       border-radius: 8px;
       overflow: hidden;
     }
+
     .slot-cell img {
       width: 100%;
       height: 100%;
       object-fit: contain;
     }
+
     .controls {
       display: flex;
       flex-direction: column;
@@ -58,16 +74,24 @@
       align-items: center;
       margin-bottom: 20px;
     }
+
     button, select {
       padding: 8px;
       border: none;
       border-radius: 5px;
-      background: #ff9800;
+      background: linear-gradient(#ffa500, #ff6f00);
       color: white;
       font-weight: bold;
       cursor: pointer;
       font-size: 14px;
+      box-shadow: 0 0 5px #ffbf00;
     }
+
+    button:hover {
+      transform: scale(1.05);
+      background: #ffc107;
+    }
+
     .win-message {
       font-size: 20px;
       font-weight: bold;
@@ -75,24 +99,31 @@
       text-align: center;
       animation: pop 0.5s ease-out;
     }
+
     @keyframes pop {
       0% { transform: scale(0.5); opacity: 0; }
       100% { transform: scale(1); opacity: 1; }
     }
   </style>
+
+  <!-- Firebase & GSAP -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 </head>
 <body>
+
+  <!-- Saldo + Bet -->
   <div class="top-bar">
     <div>Saldo: <span id="saldo">...</span></div>
     <div>Bet: <span id="currentBet">400</span></div>
     <div><button onclick="topUp()">Top Up</button></div>
   </div>
 
+  <!-- Slot Grid -->
   <div class="slot-grid" id="slotGrid"></div>
 
+  <!-- Kontrol -->
   <div class="controls">
     <div>
       <button onclick="decreaseBet()">-</button>
@@ -116,6 +147,7 @@
     <div class="win-message" id="winMessage"></div>
   </div>
 
+  <!-- Game Logic -->
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyA2F9bh-M-XbBYj14j2i93qkZiAgQHyY1I",
