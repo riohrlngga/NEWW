@@ -144,7 +144,22 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    const symbols = ['mahkota-removebg-preview.png', 'jampasir-removebg-preview.png', 'cincin-removebg-preview.png', 'cawan-removebg-preview.png', 'gemshijau-removebg-preview.png', 'zeus-removebg-preview.png'];
+    const symbolWeights = {
+      'mbol_merah-removebg-preview.png': 1,
+      'jampasir-removebg-preview.png': 2,
+      'cincin-removebg-preview.png': 2,
+      'cawan-removebg-preview.png': 3,
+      'gemshijau-removebg-preview.png': 3,
+      'bolabiru-removebg-preview.png': 3,
+      'diamond-removebg-preview.png': 4,
+      'gemsungu-removebg-preview.png': 4,
+      'mahkota-removebg-preview.png': 4,
+      'zeus-removebg-preview.png': 5,
+      'mahkota_besar-removebg-preview.png': 8
+    };
+
+    const symbols = Object.keys(symbolWeights);
+
     const ROWS = 5, COLS = 6;
     let saldo = 0, currentBet = 1000, autoSpinCount = 0, isFreeSpin = false, freeSpinCount = 0, freeSpinWin = 0;
     let userDocId = null, isSpinning = false;
@@ -195,6 +210,16 @@
     function increaseBet() { if (currentBet < 100000) currentBet += 100; updateUI(); }
     function decreaseBet() { if (currentBet > 100) currentBet -= 100; updateUI(); }
 
+    function getRandomSymbol() {
+      const weightedList = [];
+      for (let key in symbolWeights) {
+        for (let i = 0; i < symbolWeights[key]; i++) {
+          weightedList.push(key);
+        }
+      }
+      return weightedList[Math.floor(Math.random() * weightedList.length)];
+    }
+
     function createGrid() {
       grid.innerHTML = '';
       let currentGrid = Array.from({ length: ROWS }, () => []);
@@ -202,7 +227,7 @@
 
       for (let r = 0; r < ROWS; r++) {
         for (let c = 0; c < COLS; c++) {
-          let sym = symbols[Math.floor(Math.random() * symbols.length)];
+          let sym = getRandomSymbol();
           currentGrid[r][c] = { sym, mult: 0 };
 
           if (sym === 'zeus-removebg-preview.png') scatterCount++;
@@ -251,7 +276,8 @@
       let win = 0;
       for (let sym in symbolCount) {
         if (symbolCount[sym] >= 8) {
-          win = currentBet * 5;
+          let baseMultiplier = sym === 'mahkota_besar-removebg-preview.png' ? 10 : sym === 'mbol_merah-removebg-preview.png' ? 2 : 5;
+          win = currentBet * baseMultiplier;
           break;
         }
       }
