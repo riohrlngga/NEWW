@@ -127,7 +127,6 @@
   </div>
 
   <script>
-    // FIREBASE
     const firebaseConfig = {
       apiKey: "AIzaSyA2F9bh-M-XbBYj14j2i93qkZiAgQHyY1I",
       authDomain: "slotkw-f05d1.firebaseapp.com",
@@ -139,19 +138,16 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // VARIABEL
     const symbols = ['mahkota-removebg-preview.png', 'jampasir-removebg-preview.png', 'cincin-removebg-preview.png', 'cawan-removebg-preview.png', 'gemshijau-removebg-preview.png', 'zeus-removebg-preview.png'];
     const ROWS = 5, COLS = 6;
     let saldo = 0, currentBet = 1000, autoSpinCount = 0, isFreeSpin = false, freeSpinCount = 0, freeSpinWin = 0;
     let userDocId = null, isSpinning = false;
 
-    // DOM
     const grid = document.getElementById('slotGrid');
     const saldoDisplay = document.getElementById('saldo');
     const betDisplay = document.getElementById('currentBet');
     const winMessage = document.getElementById('winMessage');
 
-    // AUTH
     const user = JSON.parse(sessionStorage.getItem("loggedInUser"));
     if (!user || !user.username) {
       alert("Anda belum login!");
@@ -196,12 +192,14 @@
     function createGrid() {
       grid.innerHTML = '';
       let currentGrid = Array.from({ length: ROWS }, () => []);
-      let multiplierList = [];
+      let multiplierList = [], scatterCount = 0;
 
       for (let r = 0; r < ROWS; r++) {
         for (let c = 0; c < COLS; c++) {
           let sym = symbols[Math.floor(Math.random() * symbols.length)];
           currentGrid[r][c] = { sym, mult: 0 };
+
+          if (sym === 'zeus-removebg-preview.png') scatterCount++;
 
           const cell = document.createElement('div');
           cell.className = 'slot-cell';
@@ -210,7 +208,6 @@
           img.src = sym;
           cell.appendChild(img);
 
-          // Multiplier chance
           let chance = isFreeSpin ? 0.3 : 0.1;
           if (Math.random() < chance) {
             let m = [2, 3, 5, 10][Math.floor(Math.random() * 4)];
@@ -224,6 +221,13 @@
 
           grid.appendChild(cell);
         }
+      }
+
+      if (!isFreeSpin && scatterCount >= 4) {
+        isFreeSpin = true;
+        freeSpinCount = 12;
+        freeSpinWin = 0;
+        alert("SCATTER! Kamu dapat 12 Free Spin!");
       }
 
       checkWin(currentGrid, multiplierList);
@@ -267,10 +271,17 @@
           if (freeSpinCount > 0) {
             createGrid();
           } else {
+            if (freeSpinWin === 0) {
+              freeSpinWin = currentBet * 5;
+              alert("Free spin selesai, tapi kamu dikasih hadiah hiburan Rp" + freeSpinWin.toLocaleString());
+            } else {
+              alert(`Free spin selesai! Menang Rp${freeSpinWin.toLocaleString()}`);
+            }
             saldo += freeSpinWin;
-            alert(`Free spin selesai! Menang Rp${freeSpinWin.toLocaleString()}`);
             isFreeSpin = false;
             freeSpinWin = 0;
+            updateUI();
+            updateSaldo();
           }
         } else if (autoSpinCount > 0) {
           autoSpinCount--;
@@ -294,7 +305,7 @@
     }
 
     function buyScatter() {
-      let cost = 30_000 * (currentBet / 400);
+      let cost = 30000 * (currentBet / 400);
       if (saldo < cost) {
         alert("Saldo tidak cukup!");
         return;
